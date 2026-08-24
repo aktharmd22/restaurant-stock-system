@@ -3,8 +3,14 @@
 use App\Http\Controllers\Admin\BranchController;
 use App\Http\Controllers\Admin\BusinessSettingsController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DispatchController;
 use App\Http\Controllers\Admin\ItemController;
+use App\Http\Controllers\Admin\RequestInboxController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Branch\HomeController as BranchHomeController;
+use App\Http\Controllers\Branch\ReceiveController;
+use App\Http\Controllers\Branch\StockRequestController as BranchRequestController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -24,10 +30,19 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('branch')->prefix('b')->name('branch.')->group(function () {
-        Route::get('/', fn () => Inertia::render('Branch/Home'))->name('home');
-        Route::get('/ask', fn () => Inertia::render('Branch/AskForStock'))->name('ask');
-        Route::get('/requests', fn () => Inertia::render('Branch/MyRequests'))->name('requests');
-        Route::get('/receive', fn () => Inertia::render('Branch/Receive'))->name('receive');
+        Route::get('/', BranchHomeController::class)->name('home');
+
+        Route::get('/ask', [BranchRequestController::class, 'create'])->name('ask');
+        Route::post('/ask', [BranchRequestController::class, 'store'])->name('requests.store');
+
+        Route::get('/requests', [BranchRequestController::class, 'index'])->name('requests.index');
+        Route::get('/requests/{stockRequest}', [BranchRequestController::class, 'show'])->name('requests.show');
+        Route::post('/requests/{stockRequest}/cancel', [BranchRequestController::class, 'cancel'])->name('requests.cancel');
+
+        Route::get('/receive', [ReceiveController::class, 'index'])->name('receive');
+        Route::get('/receive/{stockRequest}', [ReceiveController::class, 'show'])->name('receive.show');
+        Route::post('/receive/{stockRequest}', [ReceiveController::class, 'store'])->name('receive.store');
+
         Route::get('/more', fn () => Inertia::render('Branch/More'))->name('more');
     });
 
@@ -37,9 +52,17 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/', fn () => Inertia::render('Admin/Dashboard'))->name('dashboard');
-        Route::get('/requests', fn () => Inertia::render('Admin/Requests/Inbox'))->name('requests.index');
-        Route::get('/dispatch', fn () => Inertia::render('Admin/Dispatch/Index'))->name('dispatch.index');
+        Route::get('/', DashboardController::class)->name('dashboard');
+
+        Route::get('/requests', [RequestInboxController::class, 'index'])->name('requests.index');
+        Route::post('/requests/{stockRequest}/approve', [RequestInboxController::class, 'approve'])->name('requests.approve');
+        Route::post('/requests/{stockRequest}/approve-all', [RequestInboxController::class, 'approveAll'])->name('requests.approveAll');
+        Route::post('/requests/{stockRequest}/cancel', [RequestInboxController::class, 'cancel'])->name('requests.cancel');
+
+        Route::get('/dispatch', [DispatchController::class, 'index'])->name('dispatch.index');
+        Route::get('/dispatch/{stockRequest}', [DispatchController::class, 'show'])->name('dispatch.show');
+        Route::post('/dispatch/{stockRequest}', [DispatchController::class, 'store'])->name('dispatch.store');
+
         Route::get('/stock', fn () => Inertia::render('Admin/Stock/Index'))->name('stock.index');
 
         Route::get('/settings', fn () => Inertia::render('Admin/Settings/Index', [
