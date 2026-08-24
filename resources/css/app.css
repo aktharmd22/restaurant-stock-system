@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        @apply bg-page text-ink font-sans text-body antialiased;
+    }
+
+    /* Columns of quantities must line up. */
+    .tabular,
+    input[inputmode='numeric'],
+    input[inputmode='decimal'],
+    table {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Keyboard focus is always visible - never removed, only restyled. */
+    :focus-visible {
+        @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-surface;
+    }
+
+    /* Stop iOS zooming the page when a field is focused: 16px minimum. */
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+}
+
+@layer components {
+    /* The signature element: a card with a 4px status-coloured left spine. */
+    .spine {
+        @apply relative overflow-hidden rounded-card border border-line bg-surface;
+    }
+
+    .spine::before {
+        content: '';
+        @apply absolute left-0 top-0 h-full w-1 rounded-l-card;
+        background-color: var(--spine-color, theme('colors.line'));
+    }
+
+    .skeleton {
+        @apply relative overflow-hidden rounded-control bg-line/70;
+    }
+
+    .skeleton::after {
+        content: '';
+        @apply absolute inset-0 -translate-x-full;
+        background-image: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0,
+            rgba(255, 255, 255, 0.65) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        animation: shimmer 1.4s infinite;
+    }
+}
+
+@layer utilities {
+    /* Notched phones: keep the bottom nav and sticky actions clear of the bar. */
+    .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    .mb-safe {
+        margin-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .h-safe-nav {
+        height: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}
+
+/* Motion is functional only, and always optional. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
