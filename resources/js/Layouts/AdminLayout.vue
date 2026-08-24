@@ -5,7 +5,9 @@ import { icons } from '@/Support/icons';
 
 import BottomNav from '@/Components/ui/BottomNav.vue';
 import BrandMark from '@/Components/ui/BrandMark.vue';
+import SoundIndicator from '@/Components/ui/SoundIndicator.vue';
 import ToastHost from '@/Components/ui/ToastHost.vue';
+import { useRealtime } from '@/Composables/useRealtime';
 
 const props = defineProps({
     title: { type: String, default: null },
@@ -14,6 +16,8 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? {});
 const currentPath = computed(() => page.url.split('?')[0]);
+
+useRealtime();
 
 // Desktop sidebar and mobile bar are driven by one list, so they can never
 // disagree about where things are.
@@ -89,6 +93,7 @@ function isActive(item) {
                         {{ props.title }}
                     </h1>
 
+                    <SoundIndicator />
                     <slot name="header-action" />
                 </div>
             </header>

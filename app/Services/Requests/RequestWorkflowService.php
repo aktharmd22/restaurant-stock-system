@@ -14,6 +14,7 @@ use App\Models\ReceiptDiscrepancy;
 use App\Models\RequestLine;
 use App\Models\StockRequest;
 use App\Models\User;
+use App\Services\AlertService;
 use App\Services\CutoffService;
 use App\Services\SequenceService;
 use App\Services\Stock\ReservationService;
@@ -36,6 +37,7 @@ class RequestWorkflowService
         private readonly ReservationService $reservations,
         private readonly SequenceService $sequences,
         private readonly CutoffService $cutoff,
+        private readonly AlertService $alerts,
     ) {
     }
 
@@ -73,7 +75,7 @@ class RequestWorkflowService
             throw new StockException('Add at least one item before sending.');
         }
 
-        return DB::transaction(function () use ($from, $main, $by, $quantities, $note, $neededBy) {
+        $request = DB::transaction(function () use ($from, $main, $by, $quantities, $note, $neededBy) {
             $isLate = $this->cutoff->isLate($from);
 
             $request = StockRequest::create([
@@ -101,6 +103,13 @@ class RequestWorkflowService
 
             return $request->fresh(['lines']);
         });
+
+        // Alerts fire only after the transaction commits. Telling the main
+        // store about a request that then rolls back would be worse than
+        // telling them nothing.
+        $this->alerts->requestSubmitted($request->load('fromBranch'));
+
+        return $request;
     }
 
     /*
@@ -122,7 +131,7 @@ class RequestWorkflowService
             throw new StockException('This request has already been looked at.');
         }
 
-        return DB::transaction(function () use ($request, $admin, $decisions) {
+        $reviewed = DB::transaction(function () use ($request, $admin, $decisions) {
             // Ascending item id: the lock order that prevents deadlocks.
             $lines = $request->lines()->with('item')->orderBy('item_id')->get();
 
@@ -179,6 +188,10 @@ class RequestWorkflowService
 
             return $request->fresh(['lines.item']);
         });
+
+        $this->alerts->requestReviewed($reviewed->load('fromBranch'));
+
+        return $reviewed;
     }
 
     /**
@@ -245,7 +258,7 @@ class RequestWorkflowService
             throw new StockException('This request is not ready to send.');
         }
 
-        return DB::transaction(function () use ($request, $by, $sentQuantities, $carrier, $vehicle) {
+        $sentRequest = DB::transaction(function () use ($request, $by, $sentQuantities, $carrier, $vehicle) {
             $lines = $request->lines()->with('item')->orderBy('item_id')->get();
             $anythingSent = false;
 
@@ -303,6 +316,10 @@ class RequestWorkflowService
 
             return $request->fresh(['lines.item', 'dispatchNote']);
         });
+
+        $this->alerts->requestDispatched($sentRequest->load('fromBranch'));
+
+        return $sentRequest;
     }
 
     /*
@@ -324,7 +341,7 @@ class RequestWorkflowService
             throw new StockException('This delivery has already been confirmed.');
         }
 
-        return DB::transaction(function () use ($request, $by, $received) {
+        $receivedRequest = DB::transaction(function () use ($request, $by, $received) {
             $lines = $request->lines()->with('item')->orderBy('item_id')->get();
 
             foreach ($lines as $line) {
@@ -380,6 +397,10 @@ class RequestWorkflowService
 
             return $request->fresh(['lines.item']);
         });
+
+        $this->alerts->requestReceived($receivedRequest->load('fromBranch'));
+
+        return $receivedRequest;
     }
 
     /*
@@ -394,7 +415,9 @@ class RequestWorkflowService
             throw new StockException('This request has already gone out and cannot be cancelled.');
         }
 
-        return DB::transaction(function () use ($request, $by, $reason) {
+        $wasSubmitted = $request->submitted_at !== null;
+
+        $cancelled = DB::transaction(function () use ($request, $by, $reason) {
             // Anything promised goes back into the pool for other branches.
             if ($request->status->awaitingDispatch()) {
                 foreach ($request->lines()->with('item')->orderBy('item_id')->get() as $line) {
@@ -413,6 +436,12 @@ class RequestWorkflowService
 
             return $request->fresh();
         });
+
+        if ($wasSubmitted) {
+            $this->alerts->requestCancelled($cancelled->load('fromBranch'));
+        }
+
+        return $cancelled;
     }
 
     /*

@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\RequestStatus;
+use App\Models\StockRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -63,6 +66,18 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
             ],
 
+            /*
+             * What is waiting, and what the last alert said. The polling
+             * fallback watches `unread` to know something happened while the
+             * screen was idle, and `pending` drives the tab badge and the
+             * five-minute nag.
+             */
+            'alerts' => $user ? [
+                'unread' => $user->unreadNotifications()->count(),
+                'latest' => $user->unreadNotifications()->latest()->first()?->data,
+                'pending' => $this->pendingCount($user),
+            ] : null,
+
             // Reverb cannot run on shared hosting. When no broadcast driver is
             // configured the frontend falls back to polling, and everything
             // still works - just a few seconds slower.
@@ -73,5 +88,23 @@ class HandleInertiaRequests extends Middleware
                 'poll_seconds' => (int) env('VITE_POLL_SECONDS', 12),
             ],
         ];
+    }
+
+    /**
+     * What is actually sitting there needing someone: requests to look at for
+     * the admin, deliveries to confirm for a branch.
+     */
+    private function pendingCount(User $user): int
+    {
+        if ($user->isAdminSide()) {
+            return StockRequest::where('status', RequestStatus::Waiting)->count();
+        }
+
+        if (! $user->branch_id) {
+            return 0;
+        }
+
+        // The branch scope narrows this to their own branch automatically.
+        return StockRequest::where('status', RequestStatus::Sent)->count();
     }
 }

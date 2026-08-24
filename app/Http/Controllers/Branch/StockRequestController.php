@@ -41,6 +41,11 @@ class StockRequestController extends Controller
 
         $stockRequest->load(['lines.item', 'dispatchNote']);
 
+        // Looking at it counts as reading the alert about it.
+        $request->user()->unreadNotifications()
+            ->where('data->request_id', $stockRequest->id)
+            ->update(['read_at' => now()]);
+
         return Inertia::render('Branch/RequestDetail', [
             'request' => RequestPresenter::detail($stockRequest),
             'canCancel' => $request->user()->can('cancel', $stockRequest),

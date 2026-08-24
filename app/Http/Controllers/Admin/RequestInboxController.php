@@ -128,6 +128,12 @@ class RequestInboxController extends Controller
             return null;
         }
 
+        // Opened means seen. This is what stops the tab badge and the
+        // five-minute nag once the admin is actually working through them.
+        $request->user()->unreadNotifications()
+            ->where('data->request_id', $stockRequest->id)
+            ->update(['read_at' => now()]);
+
         $available = StockBalance::withoutBranchScope()
             ->where('branch_id', $stockRequest->to_branch_id)
             ->whereIn('item_id', $stockRequest->lines->pluck('item_id'))

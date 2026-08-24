@@ -3,7 +3,9 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ChevronLeft } from 'lucide-vue-next';
 import BottomNav from '@/Components/ui/BottomNav.vue';
+import SoundIndicator from '@/Components/ui/SoundIndicator.vue';
 import ToastHost from '@/Components/ui/ToastHost.vue';
+import { useRealtime } from '@/Composables/useRealtime';
 
 const props = defineProps({
     title: { type: String, default: null },
@@ -13,6 +15,10 @@ const props = defineProps({
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? {});
+
+// Alerts, sound and the tab badge, whether that arrives by websocket or by
+// polling.
+useRealtime();
 
 const navItems = computed(() => [
     { label: 'Home', href: '/b', icon: 'Home', match: ['/b'] },
@@ -43,6 +49,7 @@ const navItems = computed(() => [
                     </template>
                 </div>
 
+                <SoundIndicator />
                 <slot name="header-action" />
             </div>
         </header>

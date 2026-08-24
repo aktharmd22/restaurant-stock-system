@@ -47,6 +47,13 @@ const links = computed(() =>
             show: props.can.users,
         },
         {
+            href: '/settings/sound',
+            icon: 'Bell',
+            title: 'Sound',
+            hint: 'Turn alert sounds on or off, and set how loud.',
+            show: true,
+        },
+        {
             href: '/design',
             icon: 'Palette',
             title: 'Design reference',

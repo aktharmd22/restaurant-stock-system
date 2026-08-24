@@ -12,6 +12,7 @@ use App\Http\Controllers\Branch\HomeController as BranchHomeController;
 use App\Http\Controllers\Branch\ReceiveController;
 use App\Http\Controllers\Branch\StockRequestController as BranchRequestController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SoundSettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,6 +24,11 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', HomeController::class)->name('home');
+
+    // Sound is a per-person setting, and both sides of the app share this screen.
+    Route::get('/settings/sound', fn () => Inertia::render('Settings/Sound'))->name('settings.sound.edit');
+    Route::put('/settings/sound', [SoundSettingsController::class, 'update'])->name('settings.sound');
+    Route::post('/notifications/read', [SoundSettingsController::class, 'markRead'])->name('notifications.read');
 
     /*
     |--------------------------------------------------------------------------
