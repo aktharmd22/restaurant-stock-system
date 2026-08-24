@@ -1,29 +1,67 @@
 <script setup>
+import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { ChevronRight, Store, Palette } from 'lucide-vue-next';
+import { ChevronRight } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { icons } from '@/Support/icons';
 
-const links = [
-    {
-        href: '/admin/settings/business',
-        icon: Store,
-        title: 'Restaurant name',
-        hint: 'The name on the sign-in screen, the app header and every PDF.',
-    },
-    {
-        href: '/design',
-        icon: Palette,
-        title: 'Design reference',
-        hint: 'Every part the screens are built from.',
-    },
-];
+const props = defineProps({
+    can: { type: Object, default: () => ({}) },
+});
+
+const links = computed(() =>
+    [
+        {
+            href: '/admin/settings/business',
+            icon: 'Store',
+            title: 'Restaurant name',
+            hint: 'The name on the sign-in screen, the app header and every PDF.',
+            show: props.can.settings,
+        },
+        {
+            href: '/admin/settings/items',
+            icon: 'Package',
+            title: 'Items',
+            hint: 'What branches can ask for, and how much a full shelf is.',
+            show: props.can.settings,
+        },
+        {
+            href: '/admin/settings/categories',
+            icon: 'ListChecks',
+            title: 'Item groups',
+            hint: 'The chips branches use to filter the item list.',
+            show: props.can.settings,
+        },
+        {
+            href: '/admin/settings/branches',
+            icon: 'Store',
+            title: 'Branches',
+            hint: 'Names, phone numbers and each daily cut-off time.',
+            show: props.can.branches,
+        },
+        {
+            href: '/admin/settings/users',
+            icon: 'Users',
+            title: 'People',
+            hint: 'Who can sign in, and what they are allowed to do.',
+            show: props.can.users,
+        },
+        {
+            href: '/design',
+            icon: 'Palette',
+            title: 'Design reference',
+            hint: 'Every part the screens are built from.',
+            show: true,
+        },
+    ].filter((link) => link.show),
+);
 </script>
 
 <template>
     <AdminLayout title="Settings">
         <Head title="Settings" />
 
-        <div class="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
+        <div class="max-w-3xl divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             <Link
                 v-for="link in links"
                 :key="link.href"
@@ -31,7 +69,7 @@ const links = [
                 class="flex min-h-touch items-center gap-4 p-card transition hover:bg-page"
             >
                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-light text-primary">
-                    <component :is="link.icon" :size="20" aria-hidden="true" />
+                    <component :is="icons[link.icon]" :size="20" aria-hidden="true" />
                 </span>
 
                 <span class="min-w-0 flex-1">

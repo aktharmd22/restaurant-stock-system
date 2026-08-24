@@ -21,6 +21,11 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        // Strict lazy-loading is on outside production. These two are read on
+        // every single request, so load them once here rather than tripping
+        // over them in twenty different controllers.
+        $user?->loadMissing(['branch', 'roles']);
+
         return [
             ...parent::share($request),
 
