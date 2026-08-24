@@ -21,12 +21,21 @@ useRealtime();
 
 // Desktop sidebar and mobile bar are driven by one list, so they can never
 // disagree about where things are.
+// Five is the most a phone bar can hold without the labels turning to mush.
 const navItems = [
     { label: 'Dashboard', href: '/admin', icon: 'LayoutDashboard', match: ['/admin'] },
     { label: 'Requests', href: '/admin/requests', icon: 'Inbox', match: ['/admin/requests'] },
     { label: 'Dispatch', href: '/admin/dispatch', icon: 'Truck', match: ['/admin/dispatch'] },
     { label: 'Stock', href: '/admin/stock', icon: 'Boxes', match: ['/admin/stock'] },
     { label: 'Settings', href: '/admin/settings', icon: 'Settings', match: ['/admin/settings'] },
+];
+
+// The sidebar has room for everything.
+const sidebarItems = [
+    ...navItems.slice(0, 4),
+    { label: 'Thrown away', href: '/waste', icon: 'Trash2', match: ['/waste'] },
+    { label: 'Bought locally', href: '/local-purchases', icon: 'ShoppingCart', match: ['/local-purchases'] },
+    navItems[4],
 ];
 
 function isActive(item) {
@@ -47,7 +56,7 @@ function isActive(item) {
 
             <nav class="flex-1 overflow-y-auto p-3" aria-label="Main">
                 <Link
-                    v-for="item in navItems"
+                    v-for="item in sidebarItems"
                     :key="item.href"
                     :href="item.href"
                     class="mb-1 flex min-h-touch items-center gap-3 rounded-control px-3 text-body transition"

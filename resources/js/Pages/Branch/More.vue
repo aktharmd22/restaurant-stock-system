@@ -10,6 +10,24 @@ const user = computed(() => page.props.auth?.user ?? {});
 
 const links = [
     {
+        href: '/b/stock',
+        icon: 'Boxes',
+        title: 'Stock left here',
+        hint: 'What your branch has on the shelf right now.',
+    },
+    {
+        href: '/waste',
+        icon: 'Trash2',
+        title: 'Thrown away',
+        hint: 'Record anything that went bad, spilled or expired.',
+    },
+    {
+        href: '/local-purchases',
+        icon: 'ShoppingCart',
+        title: 'Bought locally',
+        hint: 'Emergency buys, with a photo of the bill.',
+    },
+    {
         href: '/settings/sound',
         icon: 'Bell',
         title: 'Sound',

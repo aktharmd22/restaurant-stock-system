@@ -7,11 +7,15 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DispatchController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\RequestInboxController;
+use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Branch\HomeController as BranchHomeController;
 use App\Http\Controllers\Branch\ReceiveController;
 use App\Http\Controllers\Branch\StockRequestController as BranchRequestController;
+use App\Http\Controllers\Branch\StockController as BranchStockController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LocalPurchaseController;
+use App\Http\Controllers\WastageController;
 use App\Http\Controllers\SoundSettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,6 +33,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/sound', fn () => Inertia::render('Settings/Sound'))->name('settings.sound.edit');
     Route::put('/settings/sound', [SoundSettingsController::class, 'update'])->name('settings.sound');
     Route::post('/notifications/read', [SoundSettingsController::class, 'markRead'])->name('notifications.read');
+
+    // Waste and emergency buying are the same screens for both sides. The
+    // branch scope decides what each person can see.
+    Route::get('/waste', [WastageController::class, 'index'])->name('waste.index');
+    Route::post('/waste', [WastageController::class, 'store'])->name('waste.store');
+
+    Route::get('/local-purchases', [LocalPurchaseController::class, 'index'])->name('local.index');
+    Route::post('/local-purchases', [LocalPurchaseController::class, 'store'])->name('local.store');
+    Route::post('/local-purchases/{localPurchase}/approve', [LocalPurchaseController::class, 'approve'])->name('local.approve');
+    Route::post('/local-purchases/{localPurchase}/reject', [LocalPurchaseController::class, 'reject'])->name('local.reject');
 
     /*
     |--------------------------------------------------------------------------
@@ -49,6 +63,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/receive/{stockRequest}', [ReceiveController::class, 'show'])->name('receive.show');
         Route::post('/receive/{stockRequest}', [ReceiveController::class, 'store'])->name('receive.store');
 
+        Route::get('/stock', [BranchStockController::class, 'index'])->name('stock');
         Route::get('/more', fn () => Inertia::render('Branch/More'))->name('more');
     });
 
@@ -69,7 +84,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/dispatch/{stockRequest}', [DispatchController::class, 'show'])->name('dispatch.show');
         Route::post('/dispatch/{stockRequest}', [DispatchController::class, 'store'])->name('dispatch.store');
 
-        Route::get('/stock', fn () => Inertia::render('Admin/Stock/Index'))->name('stock.index');
+        Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+        Route::post('/stock/count', [StockController::class, 'startCount'])
+            ->middleware('permission:stock.count')->name('stock.count.start');
+        Route::get('/stock/count/{stockCount}', [StockController::class, 'count'])
+            ->middleware('permission:stock.count')->name('stock.count');
+        Route::post('/stock/count/{stockCount}/apply', [StockController::class, 'applyCount'])
+            ->middleware('permission:stock.adjust')->name('stock.count.apply');
 
         Route::get('/settings', fn () => Inertia::render('Admin/Settings/Index', [
             // Hide what this person cannot use. The server still enforces it.
