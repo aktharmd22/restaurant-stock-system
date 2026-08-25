@@ -134,13 +134,13 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
                     <table class="w-full text-body">
                         <thead class="border-b border-line text-left text-helper text-ink-soft">
                             <tr>
-                                <th class="px-card py-2.5 font-normal">When</th>
+                                <th class="whitespace-nowrap px-card py-2.5 font-normal">When</th>
                                 <th class="px-card py-2.5 font-normal">Item</th>
-                                <th class="px-card py-2.5 font-normal">Branch</th>
-                                <th class="px-card py-2.5 font-normal">What happened</th>
-                                <th class="px-card py-2.5 text-right font-normal">Change</th>
-                                <th class="px-card py-2.5 text-right font-normal">Left after</th>
-                                <th class="px-card py-2.5 font-normal">Who</th>
+                                <th class="whitespace-nowrap px-card py-2.5 font-normal">Branch</th>
+                                <th class="whitespace-nowrap px-card py-2.5 font-normal">What happened</th>
+                                <th class="whitespace-nowrap px-card py-2.5 text-right font-normal">Change</th>
+                                <th class="whitespace-nowrap px-card py-2.5 text-right font-normal">Left after</th>
+                                <th class="whitespace-nowrap px-card py-2.5 font-normal">Who</th>
                                 <th class="px-card py-2.5 font-normal">Why</th>
                             </tr>
                         </thead>
@@ -155,8 +155,8 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
                                         {{ row.item }}
                                     </Link>
                                 </td>
-                                <td class="px-card py-2.5 text-ink">{{ row.branch }}</td>
-                                <td class="px-card py-2.5">
+                                <td class="whitespace-nowrap px-card py-2.5 text-ink">{{ row.branch }}</td>
+                                <td class="whitespace-nowrap px-card py-2.5">
                                     <StatusText :status="row.tone" :label="row.what" size="sm" />
                                 </td>
                                 <td

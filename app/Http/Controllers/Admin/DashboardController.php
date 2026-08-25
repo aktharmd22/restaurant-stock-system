@@ -178,12 +178,12 @@ class DashboardController extends Controller
             ],
             [
                 'label' => 'On the way to branches',
-                'value' => $currency.number_format($inTransitValue, 0),
+                'value' => money_in($inTransitValue, 0),
                 'tone' => 'violet',
             ],
             [
                 'label' => 'Thrown away this month',
-                'value' => $currency.number_format($wasted, 0),
+                'value' => money_in($wasted, 0),
                 'tone' => 'rose',
             ],
             [

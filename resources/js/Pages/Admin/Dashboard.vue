@@ -158,7 +158,7 @@ const tiles = {
                         </span>
 
                         <StatusText v-if="request.is_late" status="late" size="sm" />
-                        <span class="flex w-[124px] justify-end">
+                        <span class="flex justify-end sm:w-[124px]">
                             <StatusText :status="request.status" size="sm" />
                         </span>
                     </Link>

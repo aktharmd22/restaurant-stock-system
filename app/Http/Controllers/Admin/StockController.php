@@ -31,6 +31,16 @@ class StockController extends Controller
             $request->integer('category') ?: null,
         );
 
+        // "Show me only what is running low" is the question this screen gets
+        // asked most, so it is a filter rather than something to hunt for.
+        $show = $request->string('show')->value() ?: 'all';
+
+        if ($show === 'low') {
+            $rows = $rows->where('is_low', true)->values();
+        } elseif ($show === 'none') {
+            $rows = $rows->filter(fn ($row) => ($row['on_hand'] ?? 0) <= 0)->values();
+        }
+
         return Inertia::render('Admin/Stock/Index', [
             'branch' => ['id' => $branch->id, 'name' => $branch->name, 'is_main' => $branch->isMain()],
             'branches' => Branch::active()
@@ -48,6 +58,7 @@ class StockController extends Controller
                 'branch' => $branch->id,
                 'search' => $request->string('search')->value(),
                 'category' => $request->integer('category') ?: null,
+                'show' => $show,
             ],
             'openCount' => StockCount::withoutBranchScope()
                 ->where('branch_id', $branch->id)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PurchaseOrder;
 use App\Models\Supplier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -71,5 +72,26 @@ class SupplierController extends Controller
             'name.required' => 'Enter the supplier name.',
             'name.unique' => 'That supplier is already on the list.',
         ]);
+    }
+
+    /**
+     * Orders keep their supplier's name for as long as the ledger does, so a
+     * supplier you have ordered from is switched off rather than deleted.
+     */
+    public function destroy(Supplier $supplier): RedirectResponse
+    {
+        $orders = PurchaseOrder::where('supplier_id', $supplier->id)->count();
+
+        if ($orders > 0) {
+            return back()->with(
+                'error',
+                "{$supplier->name} is on {$orders} order".($orders === 1 ? '' : 's').", so it cannot be deleted. Switch it off instead.",
+            );
+        }
+
+        $name = $supplier->name;
+        $supplier->delete();
+
+        return back()->with('success', "{$name} deleted.");
     }
 }

@@ -72,4 +72,25 @@ class CategoryController extends Controller
             'name.unique' => 'That group already exists.',
         ]);
     }
+
+    /**
+     * A group is only deletable while it is empty. Otherwise its items would
+     * be left pointing at nothing, so we say what to do first.
+     */
+    public function destroy(Category $category): RedirectResponse
+    {
+        $items = $category->items()->count();
+
+        if ($items > 0) {
+            return back()->with(
+                'error',
+                "{$category->name} still holds {$items} item".($items === 1 ? '' : 's').". Move them to another group first, or hide this one.",
+            );
+        }
+
+        $name = $category->name;
+        $category->delete();
+
+        return back()->with('success', "{$name} deleted.");
+    }
 }

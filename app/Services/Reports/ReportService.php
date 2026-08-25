@@ -439,6 +439,6 @@ class ReportService
 
     private function money(float $amount): string
     {
-        return setting('currency_symbol').number_format($amount, 2);
+        return money_in($amount, 2);
     }
 }

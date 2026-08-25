@@ -8,6 +8,7 @@ import Pagination from '@/Components/ui/Pagination.vue';
 import Card from '@/Components/ui/Card.vue';
 import ListRow from '@/Components/ui/ListRow.vue';
 import StatusText from '@/Components/ui/StatusText.vue';
+import { rupees } from '@/Support/money';
 
 const props = defineProps({
     orders: { type: Object, required: true },
@@ -92,8 +93,8 @@ function pick(status) {
                         </span>
 
                         <template #end>
-                            <span class="w-24 text-right text-body tabular text-ink">
-                                {{ currency }}{{ order.total.toLocaleString('en-IN') }}
+                            <span class="text-right text-body tabular text-ink sm:w-24">
+                                {{ rupees(order.total, currency) }}
                             </span>
                             <span class="hidden w-[132px] justify-end sm:flex">
                                 <StatusText :status="order.tone" :label="order.status_label" size="sm" />

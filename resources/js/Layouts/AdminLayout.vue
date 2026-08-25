@@ -72,11 +72,15 @@ function isActive(item) {
 
         <!-- The dark shell anchors the layout and pushes the work forward. -->
         <aside class="fixed inset-y-0 left-0 z-30 hidden w-sidebar flex-col bg-shell lg:flex">
-            <div class="flex items-center gap-3 px-5 py-5">
+            <div class="flex items-center gap-3 px-5 py-5" :title="business.name">
                 <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-white">
                     <component :is="icons.Boxes" :size="20" class="text-shell" aria-hidden="true" />
                 </span>
-                <span class="truncate text-heading text-white">{{ business.name }}</span>
+                <!-- Two lines rather than an ellipsis: a restaurant's own name
+                     is the one thing on this screen that should never be cut. -->
+                <span class="min-w-0 flex-1 text-body font-semibold leading-tight text-white line-clamp-2">
+                    {{ business.name }}
+                </span>
             </div>
 
             <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-2" aria-label="Main">

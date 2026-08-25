@@ -2,27 +2,39 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\ItemTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ItemRequest;
 use App\Models\Branch;
 use App\Models\BranchItemSetting;
 use App\Models\Category;
 use App\Models\Item;
+use App\Models\StockLedger;
+use App\Services\Items\ItemImporter;
 use App\Support\Quantity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ItemController extends Controller
 {
     public function index(Request $request): Response
     {
+        $status = $request->string('status')->value() ?: 'all';
+
         $items = Item::with('category')
             ->when($request->string('search')->trim()->value(), function ($query, string $search) {
-                $query->where('name', 'like', "%{$search}%");
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('name', 'like', "%{$search}%")
+                        ->orWhere('storage_location', 'like', "%{$search}%");
+                });
             })
             ->when($request->integer('category'), fn ($query, int $id) => $query->where('category_id', $id))
+            ->when($status === 'shown', fn ($query) => $query->where('is_active', true))
+            ->when($status === 'hidden', fn ($query) => $query->where('is_active', false))
+            ->when($request->string('unit')->value(), fn ($query, string $unit) => $query->where('order_unit', $unit))
             ->ordered()
             ->paginate(20)
             ->withQueryString()
@@ -42,11 +54,93 @@ class ItemController extends Controller
         return Inertia::render('Admin/Settings/Items/Index', [
             'items' => $items,
             'categories' => $this->categoryOptions(),
+            'units' => $this->unitOptions()['order'],
             'filters' => [
                 'search' => $request->string('search')->value(),
                 'category' => $request->integer('category') ?: null,
+                'unit' => $request->string('unit')->value() ?: null,
+                'status' => $status,
             ],
         ]);
+    }
+
+    /** The blank sheet, already carrying this restaurant's own group names. */
+    public function template(): BinaryFileResponse
+    {
+        return (new ItemTemplateExport)->download('item-template.xlsx');
+    }
+
+    public function import(Request $request, ItemImporter $importer): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+            'update_existing' => ['boolean'],
+        ], [
+            'file.required' => 'Choose the filled-in sheet first.',
+            'file.mimes' => 'That is not a spreadsheet. Save it as .xlsx or .csv.',
+            'file.max' => 'That file is too big. Split it into two.',
+        ]);
+
+        $result = $importer->import($request->file('file'), $request->boolean('update_existing', true));
+
+        return back()
+            ->with('import', $result)
+            ->with('success', $this->importSentence($result));
+    }
+
+    /**
+     * Deleting is only allowed while an item has no history. Once stock has
+     * moved, the ledger has to keep making sense, so the honest answer is
+     * "hide it" - and we say that instead of failing silently.
+     */
+    public function destroy(Item $item): RedirectResponse
+    {
+        $hasHistory = StockLedger::where('item_id', $item->id)->exists();
+
+        if ($hasHistory) {
+            return back()->with(
+                'error',
+                "{$item->name} has stock history, so it cannot be deleted. Hide it instead and it stops showing up for branches.",
+            );
+        }
+
+        $name = $item->name;
+
+        BranchItemSetting::where('item_id', $item->id)->delete();
+        $item->balances()->delete();
+        $item->delete();
+
+        return back()->with('success', "{$name} deleted.");
+    }
+
+    /** @param array{added: int, updated: int, skipped: int, problems: array<int, mixed>} $result */
+    private function importSentence(array $result): string
+    {
+        $parts = [];
+
+        if ($result['added']) {
+            $parts[] = "{$result['added']} added";
+        }
+
+        if ($result['updated']) {
+            $parts[] = "{$result['updated']} updated";
+        }
+
+        if ($result['skipped']) {
+            $parts[] = "{$result['skipped']} left alone";
+        }
+
+        if (! $parts) {
+            return 'Nothing to bring in from that sheet.';
+        }
+
+        $sentence = ucfirst(implode(', ', $parts)).'.';
+
+        if ($problems = count($result['problems'])) {
+            $sentence .= " {$problems} row".($problems === 1 ? '' : 's')." need".($problems === 1 ? 's' : '').' a look.';
+        }
+
+        return $sentence;
     }
 
     public function create(): Response

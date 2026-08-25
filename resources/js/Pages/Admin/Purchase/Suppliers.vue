@@ -1,16 +1,43 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ChevronLeft, Phone, Plus } from 'lucide-vue-next';
+import { ChevronLeft, Phone, Plus, Power, Trash2 } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import Card from '@/Components/ui/Card.vue';
+import ConfirmDialog from '@/Components/ui/ConfirmDialog.vue';
+import EmptyState from '@/Components/ui/EmptyState.vue';
+import RowMenu from '@/Components/ui/RowMenu.vue';
+import RowMenuItem from '@/Components/ui/RowMenuItem.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
-defineProps({
+const props = defineProps({
     suppliers: { type: Array, required: true },
 });
+
+const search = ref('');
+const deleting = ref(null);
+
+const shown = computed(() => {
+    const term = search.value.trim().toLowerCase();
+    if (!term) return props.suppliers;
+
+    return props.suppliers.filter(
+        (supplier) =>
+            supplier.name.toLowerCase().includes(term) ||
+            (supplier.contact_person ?? '').toLowerCase().includes(term) ||
+            (supplier.phone ?? '').includes(term),
+    );
+});
+
+function remove() {
+    router.delete(`/admin/suppliers/${deleting.value.id}`, {
+        preserveScroll: true,
+        onFinish: () => (deleting.value = null),
+    });
+}
 
 const sheetOpen = ref(false);
 const editing = ref(null);
@@ -66,10 +93,14 @@ function toggle(supplier) {
             Purchase
         </Link>
 
-        <Card :padded="false">
+        <Card>
+            <SearchField v-model="search" placeholder="Supplier, contact or phone" />
+        </Card>
+
+        <Card v-if="shown.length" class="mt-4" :padded="false">
             <div class="divide-y divide-line">
                 <div
-                    v-for="supplier in suppliers"
+                    v-for="supplier in shown"
                     :key="supplier.id"
                     class="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5"
                     :class="supplier.is_active ? '' : 'opacity-60'"
@@ -96,15 +127,45 @@ function toggle(supplier) {
                         </a>
                     </div>
 
-                    <div class="flex shrink-0 gap-2">
+                    <div class="flex shrink-0 items-center gap-1">
                         <AppButton variant="secondary" @click="openEdit(supplier)">Edit</AppButton>
-                        <AppButton variant="ghost" @click="toggle(supplier)">
-                            {{ supplier.is_active ? 'Switch off' : 'Switch on' }}
-                        </AppButton>
+
+                        <RowMenu :label="`More for ${supplier.name}`">
+                            <RowMenuItem @click="toggle(supplier)">
+                                <template #icon><Power :size="16" /></template>
+                                {{ supplier.is_active ? 'Switch off' : 'Switch on' }}
+                            </RowMenuItem>
+                            <RowMenuItem danger @click="deleting = supplier">
+                                <template #icon><Trash2 :size="16" /></template>
+                                Delete
+                            </RowMenuItem>
+                        </RowMenu>
                     </div>
                 </div>
             </div>
         </Card>
+
+        <EmptyState
+            v-else
+            class="mt-4"
+            icon="Users"
+            title="No suppliers match that"
+            message="Try a different word, or add a new supplier."
+        >
+            <template #action>
+                <AppButton @click="openNew">Add supplier</AppButton>
+            </template>
+        </EmptyState>
+
+        <ConfirmDialog
+            :open="deleting !== null"
+            :title="`Delete ${deleting?.name}?`"
+            message="This only works if you have never ordered from them. Otherwise switch them off and they stop appearing on new orders."
+            confirm="Delete"
+            danger
+            @confirm="remove"
+            @close="deleting = null"
+        />
 
         <BottomSheet
             :open="sheetOpen"

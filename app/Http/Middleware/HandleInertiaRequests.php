@@ -64,6 +64,10 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'info' => fn () => $request->session()->get('info'),
+
+                // What an Excel import did, row by row, so the screen can show
+                // exactly which lines still need a person to look at them.
+                'import' => fn () => $request->session()->get('import'),
             ],
 
             /*

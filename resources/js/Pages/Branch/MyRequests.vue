@@ -89,7 +89,7 @@ const timeOf = (request) => (request.sent_at_text ?? '').split(', ').pop();
                             <template #end>
                                 <!-- Fixed width, so the words make a column
                                      down the page rather than a ragged edge. -->
-                                <span class="flex w-[124px] justify-end">
+                                <span class="flex justify-end sm:w-[124px]">
                                     <StatusText :status="request.status" size="sm" />
                                 </span>
                             </template>

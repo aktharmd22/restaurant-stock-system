@@ -50,7 +50,7 @@ function cell(row, column) {
 </script>
 
 <template>
-    <AdminLayout :title="report.title">
+    <AdminLayout :title="report.title" :subtitle="report.hint">
         <Head :title="report.title" />
 
         <template #header-action>
@@ -80,19 +80,18 @@ function cell(row, column) {
             Reports
         </Link>
 
-        <p class="mb-4 max-w-2xl text-body text-ink-soft">{{ report.hint }}</p>
-
-        <!-- Filters -->
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <TextField v-model="from" label="From" type="date" />
-            <TextField v-model="to" label="To" type="date" />
-            <SelectField
-                v-model="branch"
-                label="Branch"
-                placeholder="Every branch"
-                :options="branches.map((b) => ({ value: b.id, label: b.name }))"
-            />
-            <div class="flex items-end">
+        <!-- Filters in their own card, the same as History, so "change what
+             you are looking at" always looks the same wherever you are. -->
+        <Card title="Narrow it down" :hint="report.period.label + (report.branch ? ` · ${report.branch}` : '')">
+            <div class="grid items-end gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <TextField v-model="from" label="From" type="date" />
+                <TextField v-model="to" label="To" type="date" />
+                <SelectField
+                    v-model="branch"
+                    label="Branch"
+                    placeholder="Every branch"
+                    :options="branches.map((b) => ({ value: b.id, label: b.name }))"
+                />
                 <button
                     type="button"
                     class="min-h-control w-full rounded-control bg-primary px-5 text-body font-medium text-white transition active:scale-[0.97]"
@@ -101,23 +100,22 @@ function cell(row, column) {
                     Show this
                 </button>
             </div>
-        </div>
+        </Card>
 
-        <!-- Summary -->
-        <div v-if="Object.keys(report.totals ?? {}).length" class="mt-4 flex flex-wrap gap-3">
+        <!-- The headline numbers, one shape, so they can be compared. -->
+        <div
+            v-if="Object.keys(report.totals ?? {}).length"
+            class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        >
             <div
                 v-for="(value, label) in report.totals"
                 :key="label"
-                class="rounded-card border border-line bg-surface px-4 py-3"
+                class="rounded-card border border-line bg-surface px-4 py-3 shadow-card"
             >
-                <p class="text-helper text-ink-soft">{{ label }}</p>
-                <p class="text-qty tabular text-ink">{{ value }}</p>
+                <p class="truncate text-helper text-ink-soft">{{ label }}</p>
+                <p class="mt-0.5 text-stat tabular leading-tight text-ink">{{ value }}</p>
             </div>
         </div>
-
-        <p class="mt-4 text-helper text-ink-soft">
-            {{ report.period.label }}<span v-if="report.branch"> · {{ report.branch }}</span>
-        </p>
 
         <!-- Desktop table -->
         <div v-if="report.rows.length" class="mt-2 hidden overflow-x-auto rounded-card border border-line bg-surface lg:block">

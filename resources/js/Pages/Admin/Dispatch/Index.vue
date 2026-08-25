@@ -41,19 +41,21 @@ const totalItems = computed(() =>
                         :href="`/admin/dispatch/${request.id}`"
                         status="late"
                     >
-                        <span class="block truncate text-body font-medium text-ink">
-                            {{ request.branch }}
+                        <span class="flex flex-wrap items-baseline gap-x-2">
+                            <span class="text-body font-medium text-ink">{{ request.branch }}</span>
+                            <span class="text-helper text-ink-soft">
+                                <span class="tabular">{{ request.item_count }}</span> items
+                            </span>
                         </span>
                         <span class="mt-0.5 block truncate text-helper text-ink-soft">
-                            {{ request.number }} · approved {{ request.sent_at_text }}
+                            {{ request.number }}
+                        </span>
+                        <span class="block truncate text-helper text-ink-muted">
+                            Approved {{ request.sent_at_text }}
                         </span>
 
                         <template #end>
-                            <span class="hidden w-12 text-right sm:block">
-                                <span class="block text-body tabular text-ink">{{ request.item_count }}</span>
-                                <span class="block text-helper text-ink-muted">items</span>
-                            </span>
-                            <span class="flex w-[124px] justify-end"><StatusText status="late" size="sm" /></span>
+                            <span class="flex justify-end sm:w-[124px]"><StatusText status="late" size="sm" /></span>
                         </template>
                     </ListRow>
                 </div>
@@ -67,19 +69,21 @@ const totalItems = computed(() =>
                         :href="`/admin/dispatch/${request.id}`"
                         :status="request.status"
                     >
-                        <span class="block truncate text-body font-medium text-ink">
-                            {{ request.branch }}
+                        <span class="flex flex-wrap items-baseline gap-x-2">
+                            <span class="text-body font-medium text-ink">{{ request.branch }}</span>
+                            <span class="text-helper text-ink-soft">
+                                <span class="tabular">{{ request.item_count }}</span> items
+                            </span>
                         </span>
                         <span class="mt-0.5 block truncate text-helper text-ink-soft">
-                            {{ request.number }} · approved {{ request.sent_at_text }}
+                            {{ request.number }}
+                        </span>
+                        <span class="block truncate text-helper text-ink-muted">
+                            Approved {{ request.sent_at_text }}
                         </span>
 
                         <template #end>
-                            <span class="hidden w-12 text-right sm:block">
-                                <span class="block text-body tabular text-ink">{{ request.item_count }}</span>
-                                <span class="block text-helper text-ink-muted">items</span>
-                            </span>
-                            <span class="flex w-[124px] justify-end"><StatusText :status="request.status" size="sm" /></span>
+                            <span class="flex justify-end sm:w-[124px]"><StatusText :status="request.status" size="sm" /></span>
                         </template>
                     </ListRow>
                 </div>

@@ -138,6 +138,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
             Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
             Route::post('/suppliers/{supplier}/toggle', [SupplierController::class, 'toggle'])->name('suppliers.toggle');
+            Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
         });
 
         // History: why every number is what it is.
@@ -172,13 +173,17 @@ Route::middleware('auth')->group(function () {
             Route::post('/settings/categories', [CategoryController::class, 'store'])->name('categories.store');
             Route::put('/settings/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
             Route::post('/settings/categories/{category}/toggle', [CategoryController::class, 'toggle'])->name('categories.toggle');
+            Route::delete('/settings/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
             Route::get('/settings/items', [ItemController::class, 'index'])->name('items.index');
+            Route::get('/settings/items/template', [ItemController::class, 'template'])->name('items.template');
+            Route::post('/settings/items/import', [ItemController::class, 'import'])->name('items.import');
             Route::get('/settings/items/new', [ItemController::class, 'create'])->name('items.create');
             Route::post('/settings/items', [ItemController::class, 'store'])->name('items.store');
             Route::get('/settings/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
             Route::post('/settings/items/{item}', [ItemController::class, 'update'])->name('items.update');
             Route::post('/settings/items/{item}/toggle', [ItemController::class, 'toggle'])->name('items.toggle');
+            Route::delete('/settings/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
         });
 
         Route::middleware('permission:branches.manage')->group(function () {
@@ -188,6 +193,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/settings/branches/{branch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
             Route::put('/settings/branches/{branch}', [BranchController::class, 'update'])->name('branches.update');
             Route::post('/settings/branches/{branch}/toggle', [BranchController::class, 'toggle'])->name('branches.toggle');
+            Route::delete('/settings/branches/{branch}', [BranchController::class, 'destroy'])->name('branches.destroy');
         });
 
         Route::middleware('permission:users.manage')->group(function () {
@@ -198,6 +204,7 @@ Route::middleware('auth')->group(function () {
             Route::put('/settings/users/{user}', [UserController::class, 'update'])->name('users.update');
             Route::post('/settings/users/{user}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
             Route::post('/settings/users/{user}/new-password', [UserController::class, 'resetPassword'])->name('users.password');
+            Route::delete('/settings/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         });
     });
 

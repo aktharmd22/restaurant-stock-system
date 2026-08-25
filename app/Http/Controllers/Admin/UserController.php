@@ -6,8 +6,11 @@ use App\Enums\RoleName;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UserRequest;
 use App\Models\Branch;
+use App\Models\StockLedger;
+use App\Models\StockRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -150,5 +153,32 @@ class UserController extends Controller
     private function roleLabel(?string $role): string
     {
         return $role ? (RoleName::tryFrom($role)?->label() ?? $role) : 'No role';
+    }
+
+    /**
+     * Someone who has moved stock stays on the list, because their name is on
+     * ledger rows that have to keep making sense. Switching them off already
+     * stops them signing in, which is what deleting was really for.
+     */
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        if ($request->user()->is($user)) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $hasHistory = StockLedger::where('created_by', $user->id)->exists()
+            || StockRequest::withoutGlobalScopes()->where('created_by', $user->id)->exists();
+
+        if ($hasHistory) {
+            return back()->with(
+                'error',
+                "{$user->name} has moved stock before, so the record has to stay. Switch them off and they can no longer sign in.",
+            );
+        }
+
+        $name = $user->name;
+        $user->delete();
+
+        return back()->with('success', "{$name} deleted.");
     }
 }

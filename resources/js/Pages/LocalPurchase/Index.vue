@@ -13,6 +13,7 @@ import Pagination from '@/Components/ui/Pagination.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
 import StatusText from '@/Components/ui/StatusText.vue';
 import TextField from '@/Components/ui/TextField.vue';
+import { money } from '@/Support/money';
 
 const props = defineProps({
     purchases: { type: Object, required: true },
@@ -39,14 +40,8 @@ const label = { waiting: 'Waiting', approved: 'Approved', rejected: 'Not approve
 const waiting = computed(() => props.purchases.data.filter((p) => p.status === 'waiting'));
 const decided = computed(() => props.purchases.data.filter((p) => p.status !== 'waiting'));
 
-// Paise only show when there are any, so a round bill is not "₹42.00".
-const money = (value) => {
-    const amount = Number(value);
-    return `${props.currency}${amount.toLocaleString('en-IN', {
-        minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
-        maximumFractionDigits: 2,
-    })}`;
-};
+// Same decimals on every row: a column you cannot scan down is not a column.
+const amount = (value) => money(value, { symbol: props.currency });
 
 function pickBill(event) {
     form.bill = event.target.files?.[0] ?? null;
@@ -137,7 +132,7 @@ function reject() {
                                 </p>
                             </div>
 
-                            <p class="shrink-0 text-qty tabular text-ink">{{ money(purchase.amount) }}</p>
+                            <p class="shrink-0 text-qty tabular text-ink">{{ amount(purchase.amount) }}</p>
                         </div>
 
                         <div v-if="canDecide" class="mt-2.5 flex flex-wrap gap-2 pl-14">
@@ -168,10 +163,10 @@ function reject() {
                         </span>
 
                         <template #end>
-                            <span class="w-20 text-right text-body tabular text-ink">
-                                {{ money(purchase.amount) }}
+                            <span class="text-right text-body tabular text-ink sm:w-20">
+                                {{ amount(purchase.amount) }}
                             </span>
-                            <span class="flex w-[116px] justify-end">
+                            <span class="flex justify-end sm:w-[116px]">
                                 <StatusText
                                     :status="tone[purchase.status]"
                                     :label="label[purchase.status]"
