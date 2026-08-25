@@ -44,7 +44,10 @@ function submit() {
             People
         </Link>
 
-        <form class="max-w-xl space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg" @submit.prevent="submit">
+        <form
+            class="max-w-4xl space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg"
+            @submit.prevent="submit"
+        >
             <TextField v-model="form.name" label="Name" :error="form.errors.name" />
 
             <!-- Either of these is a sign-in. Kitchen staff have a phone and
@@ -59,36 +62,40 @@ function submit() {
                     </span>
                 </legend>
 
-                <TextField
-                    v-model="form.phone"
-                    label="Phone number"
-                    inputmode="tel"
-                    :error="form.errors.phone"
-                />
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <TextField
+                        v-model="form.phone"
+                        label="Phone number"
+                        inputmode="tel"
+                        :error="form.errors.phone"
+                    />
 
-                <TextField
-                    v-model="form.email"
-                    label="Email"
-                    type="email"
-                    inputmode="email"
-                    :error="form.errors.email"
-                />
+                    <TextField
+                        v-model="form.email"
+                        label="Email"
+                        type="email"
+                        inputmode="email"
+                        :error="form.errors.email"
+                    />
+                </div>
             </fieldset>
 
-            <SelectField
-                v-model="form.branch_id"
-                label="Works at"
-                placeholder="Pick a branch"
-                :options="branches"
-                :error="form.errors.branch_id"
-            />
+            <div class="grid gap-4 sm:grid-cols-2">
+                <SelectField
+                    v-model="form.branch_id"
+                    label="Works at"
+                    placeholder="Pick a branch"
+                    :options="branches"
+                    :error="form.errors.branch_id"
+                />
 
-            <SelectField
-                v-model="form.role"
-                label="Allowed to"
-                :options="roles"
-                :error="form.errors.role"
-            />
+                <SelectField
+                    v-model="form.role"
+                    label="Allowed to"
+                    :options="roles"
+                    :error="form.errors.role"
+                />
+            </div>
 
             <TextField
                 v-model="form.password"

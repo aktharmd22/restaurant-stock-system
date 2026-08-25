@@ -40,7 +40,7 @@ const samples = [
     <component :is="Layout" title="Sound" :back="user.is_admin_side ? undefined : '/b/more'">
         <Head title="Sound" />
 
-        <div class="max-w-xl space-y-4">
+        <div class="max-w-3xl space-y-4">
             <div
                 v-if="sound.state.blocked && form.sound_enabled"
                 class="rounded-card border border-waiting/20 bg-waiting-bg p-card text-body text-waiting"

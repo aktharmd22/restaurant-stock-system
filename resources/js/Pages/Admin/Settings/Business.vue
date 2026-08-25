@@ -25,7 +25,7 @@ const form = useForm({ ...props.values });
         </Link>
 
         <form
-            class="max-w-xl space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg"
+            class="max-w-3xl space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg"
             @submit.prevent="form.put(route('admin.settings.business.update'))"
         >
             <TextField

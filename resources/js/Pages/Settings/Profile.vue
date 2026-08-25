@@ -38,7 +38,7 @@ function savePassword() {
     <component :is="Layout" title="Your details" :back="user.is_admin_side ? undefined : '/b/more'">
         <Head title="Your details" />
 
-        <div class="max-w-xl space-y-4">
+        <div class="max-w-3xl space-y-4">
             <section class="rounded-card border border-line bg-surface p-card lg:p-card-lg">
                 <p class="text-body text-ink">{{ person.branch ?? 'No branch' }}</p>
                 <p class="text-helper text-ink-soft">

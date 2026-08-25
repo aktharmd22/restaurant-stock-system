@@ -42,36 +42,46 @@ function submit() {
             Branches
         </Link>
 
-        <form class="max-w-xl space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg" @submit.prevent="submit">
-            <TextField v-model="form.name" label="Branch name" :error="form.errors.name" />
+        <!--
+            Two columns once there is room. A form this short in a 570px
+            column left two thirds of a laptop screen empty and pushed the
+            save button below the fold for no reason.
+        -->
+        <form
+            class="max-w-4xl space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg"
+            @submit.prevent="submit"
+        >
+            <div class="grid gap-4 sm:grid-cols-2">
+                <TextField v-model="form.name" label="Branch name" :error="form.errors.name" />
 
-            <TextField
-                v-model="form.code"
-                label="Short code"
-                hint="Used on request numbers, like PARK."
-                :error="form.errors.code"
-            />
+                <TextField
+                    v-model="form.code"
+                    label="Short code"
+                    hint="Used on request numbers, like PARK."
+                    :error="form.errors.code"
+                />
 
-            <SelectField
-                v-model="form.type"
-                label="Kind of branch"
-                :options="[
-                    { value: 'sub', label: 'Branch - asks the main store for stock' },
-                    { value: 'main', label: 'Main store - holds stock and approves' },
-                ]"
-                :error="form.errors.type"
-            />
+                <SelectField
+                    v-model="form.type"
+                    label="Kind of branch"
+                    :options="[
+                        { value: 'sub', label: 'Branch - asks the main store for stock' },
+                        { value: 'main', label: 'Main store - holds stock and approves' },
+                    ]"
+                    :error="form.errors.type"
+                />
 
-            <TextField
-                v-model="form.cutoff_time"
-                label="Daily cut-off time"
-                type="time"
-                hint="After this, a request is marked Late. It is never blocked - a branch can ask at any hour."
-                :error="form.errors.cutoff_time"
-            />
+                <TextField
+                    v-model="form.cutoff_time"
+                    label="Daily cut-off time"
+                    type="time"
+                    hint="After this, a request is marked Late. It is never blocked - a branch can ask at any hour."
+                    :error="form.errors.cutoff_time"
+                />
 
-            <TextField v-model="form.phone" label="Phone number" inputmode="tel" :error="form.errors.phone" />
-            <TextField v-model="form.address" label="Address" :error="form.errors.address" />
+                <TextField v-model="form.phone" label="Phone number" inputmode="tel" :error="form.errors.phone" />
+                <TextField v-model="form.address" label="Address" :error="form.errors.address" />
+            </div>
 
             <div class="border-t border-line pt-4">
                 <SwitchField
