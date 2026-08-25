@@ -18,10 +18,36 @@ use App\Http\Controllers\Branch\StockRequestController as BranchRequestControlle
 use App\Http\Controllers\Branch\StockController as BranchStockController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LocalPurchaseController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WastageController;
 use App\Http\Controllers\SoundSettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+/*
+ * The app manifest is generated rather than a static file, so an admin who
+ * renames the restaurant renames the icon on everyone's home screen too.
+ */
+Route::get('/manifest.webmanifest', function () {
+    return response()->json([
+        'name' => setting('business_name'),
+        'short_name' => \Illuminate\Support\Str::limit(setting('business_name'), 12, ''),
+        'description' => setting('business_tagline'),
+        'start_url' => '/home',
+        'scope' => '/',
+        'display' => 'standalone',
+        'orientation' => 'portrait',
+        'background_color' => '#F6F7F9',
+        'theme_color' => '#1F5EFF',
+        'icons' => [
+            ['src' => '/icons/icon-192.png', 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any maskable'],
+            ['src' => '/icons/icon-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable'],
+        ],
+    ])->header('Content-Type', 'application/manifest+json');
+})->name('manifest');
+
+// Shown by the service worker when the phone has no signal.
+Route::get('/offline', fn () => response()->view('offline'))->name('offline');
 
 Route::get('/', function () {
     return auth()->check()
@@ -31,6 +57,9 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', HomeController::class)->name('home');
+
+    Route::get('/settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/settings/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Sound is a per-person setting, and both sides of the app share this screen.
     Route::get('/settings/sound', fn () => Inertia::render('Settings/Sound'))->name('settings.sound.edit');

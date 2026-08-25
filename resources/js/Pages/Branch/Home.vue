@@ -6,6 +6,7 @@ import BranchLayout from '@/Layouts/BranchLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import CountdownTimer from '@/Components/ui/CountdownTimer.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import InstallPrompt from '@/Components/ui/InstallPrompt.vue';
 import SpineCard from '@/Components/ui/SpineCard.vue';
 import StatusPill from '@/Components/ui/StatusPill.vue';
 
@@ -81,6 +82,8 @@ const lowPrefillUrl = computed(
             </SpineCard>
 
             <CountdownTimer :at="cutoff.at" :is-past="cutoff.is_past" :time="cutoff.time" />
+
+            <InstallPrompt />
 
             <!-- Running low -->
             <section v-if="runningLow.length">

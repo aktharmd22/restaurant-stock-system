@@ -30,6 +30,7 @@ class StockRequest extends Model
     /** @var list<string> */
     protected $fillable = [
         'request_number',
+        'client_token',
         'from_branch_id',
         'to_branch_id',
         'status',

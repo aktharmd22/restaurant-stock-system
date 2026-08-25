@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { ChevronLeft } from 'lucide-vue-next';
 import BottomNav from '@/Components/ui/BottomNav.vue';
+import OfflineBanner from '@/Components/ui/OfflineBanner.vue';
 import SoundIndicator from '@/Components/ui/SoundIndicator.vue';
 import ToastHost from '@/Components/ui/ToastHost.vue';
 import { useRealtime } from '@/Composables/useRealtime';
@@ -30,6 +31,13 @@ const navItems = computed(() => [
 
 <template>
     <div class="min-h-dvh bg-page">
+        <!-- Keyboard users should not have to tab through the whole nav. -->
+        <a
+            href="#main"
+            class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-primary focus:px-4 focus:py-3 focus:text-body focus:text-white"
+        >
+            Skip to the page
+        </a>
         <header class="sticky top-0 z-30 border-b border-line bg-surface pt-safe">
             <div class="mx-auto flex min-h-[60px] max-w-3xl items-center gap-3 px-4">
                 <Link
@@ -52,9 +60,11 @@ const navItems = computed(() => [
                 <SoundIndicator />
                 <slot name="header-action" />
             </div>
+
+            <OfflineBanner />
         </header>
 
-        <main class="mx-auto max-w-3xl px-4 py-4" :class="$slots.action ? 'pb-52' : 'pb-28'">
+        <main id="main" tabindex="-1" class="mx-auto max-w-3xl px-4 py-4" :class="$slots.action ? 'pb-52' : 'pb-28'">
             <slot />
         </main>
 

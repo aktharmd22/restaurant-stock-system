@@ -3,9 +3,12 @@ import './bootstrap';
 
 // DM Sans, self-hosted. Loading these from Google would add a third-party
 // round trip on a slow mobile connection before any text renders.
-import '@fontsource/dm-sans/400.css';
-import '@fontsource/dm-sans/500.css';
-import '@fontsource/dm-sans/700.css';
+//
+// Latin subset only: the app is English, and the extended subsets were 22 kB
+// of font files nobody here will ever see a character of.
+import '@fontsource/dm-sans/latin-400.css';
+import '@fontsource/dm-sans/latin-500.css';
+import '@fontsource/dm-sans/latin-700.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -23,6 +26,16 @@ const initialPage = (() => {
 
 const appName =
     initialPage?.props?.business?.name || import.meta.env.VITE_APP_NAME || 'Restaurant Stock';
+
+// Lets branch staff add the app to their home screen, and gives them an
+// honest "no internet" page instead of the browser's error.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // Not fatal - the app works fine without it.
+        });
+    });
+}
 
 createInertiaApp({
     title: (title) => (title ? `${title} · ${appName}` : appName),

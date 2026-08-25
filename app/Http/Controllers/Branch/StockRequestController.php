@@ -90,6 +90,8 @@ class StockRequestController extends Controller
             'lines.*.qty' => ['required', 'numeric', 'min:0'],
             'note' => ['nullable', 'string', 'max:255'],
             'needed_by' => ['nullable', 'date', 'after_or_equal:today'],
+            // Generated on the phone so a retry cannot create a second request.
+            'client_token' => ['nullable', 'string', 'max:40'],
         ], [
             'lines.required' => 'Add at least one item before sending.',
             'needed_by.after_or_equal' => 'Pick today or a day after it.',
@@ -102,6 +104,7 @@ class StockRequestController extends Controller
                 $validated['lines'],
                 $validated['note'] ?? null,
                 $validated['needed_by'] ?? null,
+                $validated['client_token'] ?? null,
             );
         } catch (StockException $exception) {
             return back()->with('error', $exception->getMessage());

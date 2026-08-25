@@ -28,6 +28,12 @@ const links = [
         hint: 'Emergency buys, with a photo of the bill.',
     },
     {
+        href: '/settings/profile',
+        icon: 'Users',
+        title: 'Your details',
+        hint: 'Your name, phone number and password.',
+    },
+    {
         href: '/settings/sound',
         icon: 'Bell',
         title: 'Sound',

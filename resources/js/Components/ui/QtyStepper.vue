@@ -99,12 +99,12 @@ onBeforeUnmount(stopHold);
 
 <template>
     <div
-        class="inline-flex items-center rounded-control border border-line bg-surface"
+        class="inline-flex shrink-0 items-center rounded-control border border-line bg-surface"
         :class="disabled ? 'opacity-60' : ''"
     >
         <button
             type="button"
-            class="flex h-touch w-touch items-center justify-center rounded-l-control text-ink transition active:scale-[0.97] disabled:text-ink-muted"
+            class="flex h-touch w-touch shrink-0 items-center justify-center rounded-l-control text-ink transition active:scale-[0.97] disabled:text-ink-muted"
             :disabled="!canDecrease"
             :aria-label="`Less ${label}`"
             @pointerdown="startHold(-1)"
@@ -142,7 +142,7 @@ onBeforeUnmount(stopHold);
 
         <button
             type="button"
-            class="flex h-touch w-touch items-center justify-center rounded-r-control text-ink transition active:scale-[0.97] disabled:text-ink-muted"
+            class="flex h-touch w-touch shrink-0 items-center justify-center rounded-r-control text-ink transition active:scale-[0.97] disabled:text-ink-muted"
             :disabled="!canIncrease"
             :aria-label="`More ${label}`"
             @pointerdown="startHold(1)"

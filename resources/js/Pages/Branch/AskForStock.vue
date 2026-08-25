@@ -7,6 +7,7 @@ import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
 import TextField from '@/Components/ui/TextField.vue';
+import { useOfflineQueue } from '@/Composables/useOfflineQueue';
 import { useToast } from '@/Composables/useToast';
 
 const props = defineProps({
@@ -23,7 +24,22 @@ const activeCategory = ref(null);
 const search = ref('');
 const noteOpen = ref(false);
 
-const form = useForm({ lines: [], note: '', needed_by: null });
+const { state: connection, enqueue } = useOfflineQueue();
+
+/*
+ * A token generated here, not on the server. If this send is queued and later
+ * retried, the server recognises the token and hands back the request it
+ * already made instead of making a second one.
+ */
+function newToken() {
+    return typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `t-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+}
+
+const clientToken = ref(newToken());
+
+const form = useForm({ lines: [], note: '', needed_by: null, client_token: clientToken.value });
 
 /*
  * Arriving from "Running low" pre-fills those items with the suggested amount,
@@ -83,6 +99,27 @@ function clearAll() {
 
 function send() {
     form.lines = chosen.value;
+    form.client_token = clientToken.value;
+
+    // Known to be offline: save it and say so, rather than spinning forever.
+    if (!connection.online) {
+        enqueue({
+            url: '/b/ask',
+            data: { lines: chosen.value, note: form.note, client_token: clientToken.value },
+            label: 'Your stock request',
+        });
+
+        toast.success('No internet. We saved this — it will send when you are back online.', {
+            duration: 9000,
+        });
+
+        quantities.value = {};
+        form.note = '';
+        clientToken.value = newToken();
+
+        return;
+    }
+
     form.post('/b/ask', { preserveScroll: true });
 }
 </script>

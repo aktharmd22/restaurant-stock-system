@@ -5,6 +5,7 @@ import { icons } from '@/Support/icons';
 
 import BottomNav from '@/Components/ui/BottomNav.vue';
 import BrandMark from '@/Components/ui/BrandMark.vue';
+import OfflineBanner from '@/Components/ui/OfflineBanner.vue';
 import SoundIndicator from '@/Components/ui/SoundIndicator.vue';
 import ToastHost from '@/Components/ui/ToastHost.vue';
 import { useRealtime } from '@/Composables/useRealtime';
@@ -48,6 +49,13 @@ function isActive(item) {
 
 <template>
     <div class="min-h-dvh bg-page">
+        <!-- Keyboard users should not have to tab through the whole nav. -->
+        <a
+            href="#main"
+            class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-primary focus:px-4 focus:py-3 focus:text-body focus:text-white"
+        >
+            Skip to the page
+        </a>
         <!-- Desktop sidebar -->
         <aside
             class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface lg:flex"
@@ -107,9 +115,11 @@ function isActive(item) {
                     <SoundIndicator />
                     <slot name="header-action" />
                 </div>
+
+                <OfflineBanner />
             </header>
 
-            <main class="px-4 py-4 pb-28 lg:px-6 lg:py-6 lg:pb-6">
+            <main id="main" tabindex="-1" class="px-4 py-4 pb-28 lg:px-6 lg:py-6 lg:pb-6">
                 <slot />
             </main>
         </div>

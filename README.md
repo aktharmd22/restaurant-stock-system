@@ -1,66 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Restaurant stock system
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+One main store, several branches. Branches ask for stock, the main store
+approves it, someone packs and sends it, the branch confirms what actually
+arrived. It replaces doing all of that on WhatsApp and paper.
 
-## About Laravel
+Built for **Hostinger shared hosting** — see [DEPLOY.md](DEPLOY.md).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Running it locally
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+composer install
+npm install
 
-## Learning Laravel
+cp .env.example .env
+php artisan key:generate
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# create the database first, then:
+php artisan migrate --seed
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+npm run dev          # in one terminal
+php artisan serve    # in another
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Then sign in at http://localhost:8000 as any of these:
 
-## Laravel Sponsors
+| Who | Phone | Password |
+|---|---|---|
+| Owner | `9000000001` | `password` |
+| Main store admin | `9000000002` | `password` |
+| Branch manager (Park Street) | `9000000003` | `password` |
+| Branch staff (Park Street) | `9000000004` | `password` |
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The seeder builds a month of history by running the real workflow, so the ledger,
+the balances and every request are genuinely consistent — around 70 requests
+through every state, 1,900 stock movements, waste, emergency buying and supplier
+orders.
 
-### Premium Partners
+Run the tests with `php artisan test`.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+## How it is put together
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+**The ledger is the truth.** Every stock movement writes one immutable row to
+`stock_ledger`. `stock_balances` is a cache of it and can be thrown away:
 
-## Code of Conduct
+```bash
+php artisan stock:rebuild-balances --check   # do they agree?
+php artisan stock:rebuild-balances           # make them agree
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**Only `StockLedgerService` writes stock.** A test in `ArchitectureTest` fails
+the build if anything else tries. A rule that is not tested is a rule that gets
+broken in six months.
 
-## Security Vulnerabilities
+**Quantities are whole numbers of base units** — grams, millilitres, pieces.
+1.5 kg is stored as `1500`. No floats anywhere near stock, so `SUM(qty_delta)`
+equals `qty_on_hand` exactly, forever. A `Quantity` value object carries the
+item it belongs to, so no service can be handed a bare `5` that means kilograms
+in one place and grams in another.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Approving reserves stock.** `available = on hand − reserved`, checked inside a
+row lock, never against whatever the admin's screen was showing a minute ago.
+Two branches can never be promised the same 20 kg.
 
-## License
+**Four quantities per line** — asked, approved, sent, arrived. The gaps between
+them are the whole point, and every report is built on them.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**Nothing is deleted.** Soft deletes and status changes only. A mistake is
+corrected by writing an opposite movement with a reason.
+
+### Where things live
+
+```
+app/
+  Services/Stock/          the ledger, reservations, counting, reading stock
+  Services/Requests/       the ask -> approve -> send -> receive state machine
+  Services/Purchasing/     supplier orders and goods received
+  Services/Reports/        one definition per report, drives screen + Excel + PDF
+  Support/Quantity.php     the value object that stops unit bugs
+resources/js/
+  Components/ui/           the design system
+  Composables/             sound, live updates, offline queue, toasts
+  Pages/Branch/            five screens, phone first
+  Pages/Admin/             laptop first, works on a phone
+```
+
+`/design` is a live reference of every part the screens are built from.
+
+---
+
+## Things worth knowing
+
+**Reverb, Redis and Horizon are not used.** None of them can run on shared
+hosting. Broadcasting goes through Pusher when credentials exist and falls back
+to a 12-second poll when they do not — same interface either way, and one `.env`
+line switches to Reverb if this ever moves to a VPS.
+
+**Alert sounds are synthesised in the browser**, not loaded as audio files.
+Nothing to download on mobile data and nothing that can 404 into silence.
+
+**The cut-off never blocks anything.** A branch can ask for stock at any hour,
+as many times a day as it needs. Being past the cut-off only marks a request
+Late and pins it to the top of the admin's list.
+
+**Branch scoping is enforced twice** — a global query scope and a policy on
+every action. Asking for another branch's request returns 404 rather than 403,
+because a 403 confirms the record exists.
+
+---
+
+## Still to do
+
+- **Consumption** is currently recorded by stock counts, and the demo seeder
+  writes it directly. A POS or recipe integration would deduct it per dish,
+  which is the real answer.
+- **Batch tracking** is not implemented. Perishables get a use-by date derived
+  from the last delivery plus shelf life, which answers "what needs using
+  first" without a lot table.
+- **SMS** runs on a log driver until a provider is connected.
+- **The offline retry queue** covers sending a stock request. Confirming a
+  delivery and recording waste still need a connection.

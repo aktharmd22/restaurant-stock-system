@@ -59,7 +59,20 @@ class RequestWorkflowService
         array $lines,
         ?string $note = null,
         ?string $neededBy = null,
+        ?string $clientToken = null,
     ): StockRequest {
+        // A retry from a phone that lost its connection mid-send. The request
+        // was already made; hand back the same one rather than making a second.
+        if ($clientToken) {
+            $existing = StockRequest::withoutBranchScope()
+                ->where('client_token', $clientToken)
+                ->first();
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
         $main = Branch::main();
 
         if (! $main) {
@@ -77,11 +90,12 @@ class RequestWorkflowService
             throw new StockException('Add at least one item before sending.');
         }
 
-        $request = DB::transaction(function () use ($from, $main, $by, $quantities, $note, $neededBy) {
+        $request = DB::transaction(function () use ($from, $main, $by, $quantities, $note, $neededBy, $clientToken) {
             $isLate = $this->cutoff->isLate($from);
 
             $request = StockRequest::create([
                 'request_number' => $this->sequences->requestNumber($from->code),
+                'client_token' => $clientToken,
                 'from_branch_id' => $from->id,
                 'to_branch_id' => $main->id,
                 'status' => RequestStatus::Waiting,

@@ -13,6 +13,8 @@
         <title inertia>{{ setting('business_name') }}</title>
 
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/icons/icon-192.png">
+        <link rel="manifest" href="/manifest.webmanifest">
 
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])

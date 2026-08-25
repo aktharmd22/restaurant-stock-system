@@ -47,6 +47,13 @@ const links = computed(() =>
             show: props.can.users,
         },
         {
+            href: '/settings/profile',
+            icon: 'Users',
+            title: 'Your details',
+            hint: 'Your own name, phone number and password.',
+            show: true,
+        },
+        {
             href: '/settings/sound',
             icon: 'Bell',
             title: 'Sound',
