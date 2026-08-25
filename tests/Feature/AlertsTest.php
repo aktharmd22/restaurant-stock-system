@@ -19,7 +19,7 @@ beforeEach(function () {
     $this->onion = kgItem('Onion');
     giveStock($this->main, $this->onion, 100);
 
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park, ['phone' => '9000000101']);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park, ['phone' => '9000000101']);
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main, ['phone' => '9000000102']);
 });
 

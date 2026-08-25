@@ -41,25 +41,22 @@ class RoleSeeder extends Seeder
             Permission::findOrCreate($permission, 'web');
         }
 
+        /*
+         * Three roles. Two run the business and one runs a kitchen.
+         *
+         * Owner and Admin hold the same permissions on purpose: both are
+         * meant to handle everything, including the main store. The titles
+         * still differ because who somebody is matters when you are reading
+         * a history page months later.
+         */
         $roles = [
             RoleName::SuperAdmin->value => self::PERMISSIONS,
-
-            RoleName::MainAdmin->value => [
-                'requests.approve', 'requests.dispatch', 'requests.cancel',
-                'stock.view', 'stock.count', 'stock.adjust',
-                'waste.record', 'local_purchase.approve',
-                'purchase.manage', 'reports.view', 'settings.manage',
-            ],
+            RoleName::MainAdmin->value => self::PERMISSIONS,
 
             RoleName::BranchManager->value => [
                 'requests.create', 'requests.receive', 'requests.cancel',
                 'stock.view', 'stock.count', 'waste.record',
                 'local_purchase.request', 'reports.view',
-            ],
-
-            RoleName::BranchStaff->value => [
-                'requests.create', 'requests.receive',
-                'stock.view', 'waste.record', 'local_purchase.request',
             ],
         ];
 

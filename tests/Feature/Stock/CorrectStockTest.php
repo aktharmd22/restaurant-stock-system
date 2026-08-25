@@ -102,7 +102,7 @@ it('shows the reason in history instead of "Corrected by hand"', function () {
 });
 
 it('keeps someone without the stock permission out', function () {
-    $staff = userWithRole(RoleName::BranchStaff, subBranch());
+    $staff = userWithRole(RoleName::BranchManager, subBranch());
 
     $this->actingAs($staff)
         ->post('/admin/stock/correct', [

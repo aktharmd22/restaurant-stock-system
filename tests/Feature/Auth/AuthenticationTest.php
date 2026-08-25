@@ -13,7 +13,7 @@ it('shows the sign in screen', function () {
 });
 
 it('signs in with an email address', function () {
-    $user = userWithRole(RoleName::BranchStaff, subBranch(), [
+    $user = userWithRole(RoleName::BranchManager, subBranch(), [
         'email' => 'staff@demo.test',
         'password' => 'password',
     ]);
@@ -25,7 +25,7 @@ it('signs in with an email address', function () {
 });
 
 it('signs in with a phone number, because branch staff often have no email', function () {
-    $user = userWithRole(RoleName::BranchStaff, subBranch(), [
+    $user = userWithRole(RoleName::BranchManager, subBranch(), [
         'phone' => '9876543210',
         'password' => 'password',
     ]);
@@ -37,7 +37,7 @@ it('signs in with a phone number, because branch staff often have no email', fun
 });
 
 it('ignores spaces and dashes in a typed phone number', function () {
-    userWithRole(RoleName::BranchStaff, subBranch(), [
+    userWithRole(RoleName::BranchManager, subBranch(), [
         'phone' => '9876543210',
         'password' => 'password',
     ]);
@@ -49,7 +49,7 @@ it('ignores spaces and dashes in a typed phone number', function () {
 });
 
 it('refuses a switched-off account', function () {
-    userWithRole(RoleName::BranchStaff, subBranch(), [
+    userWithRole(RoleName::BranchManager, subBranch(), [
         'email' => 'gone@demo.test',
         'password' => 'password',
         'is_active' => false,
@@ -62,7 +62,7 @@ it('refuses a switched-off account', function () {
 });
 
 it('explains a wrong password in plain words', function () {
-    userWithRole(RoleName::BranchStaff, subBranch(), [
+    userWithRole(RoleName::BranchManager, subBranch(), [
         'email' => 'staff@demo.test',
         'password' => 'password',
     ]);
@@ -76,7 +76,7 @@ it('explains a wrong password in plain words', function () {
 });
 
 it('sends branch people to the branch app and admins to the admin app', function () {
-    $staff = userWithRole(RoleName::BranchStaff, subBranch());
+    $staff = userWithRole(RoleName::BranchManager, subBranch());
     $this->actingAs($staff)->get('/home')->assertRedirect('/b');
 
     $admin = userWithRole(RoleName::MainAdmin, mainBranch());
@@ -84,7 +84,7 @@ it('sends branch people to the branch app and admins to the admin app', function
 });
 
 it('records when someone last signed in', function () {
-    $user = userWithRole(RoleName::BranchStaff, subBranch(), [
+    $user = userWithRole(RoleName::BranchManager, subBranch(), [
         'email' => 'staff@demo.test',
         'password' => 'password',
     ]);
@@ -97,7 +97,7 @@ it('records when someone last signed in', function () {
 });
 
 it('signs out', function () {
-    $user = userWithRole(RoleName::BranchStaff, subBranch());
+    $user = userWithRole(RoleName::BranchManager, subBranch());
 
     $this->actingAs($user)->post('/logout')->assertRedirect('/login');
 

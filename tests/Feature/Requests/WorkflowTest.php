@@ -22,7 +22,7 @@ beforeEach(function () {
     giveStock($this->main, $this->onion, 100);
     giveStock($this->main, $this->chicken, 50);
 
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park);
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
 });
 
@@ -46,7 +46,7 @@ it('sends a request with a readable number', function () {
 
 it('numbers each branch separately', function () {
     $lake = subBranch('LAKE');
-    $lakeStaff = userWithRole(RoleName::BranchStaff, $lake);
+    $lakeStaff = userWithRole(RoleName::BranchManager, $lake);
 
     $first = $this->workflow->submit($this->park, $this->staff, [['item_id' => $this->onion->id, 'qty' => 1]]);
     $second = $this->workflow->submit($lake, $lakeStaff, [['item_id' => $this->onion->id, 'qty' => 1]]);

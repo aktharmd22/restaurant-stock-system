@@ -69,7 +69,7 @@ it('never deletes the main store', function () {
 
 it('refuses to delete a branch that still has people at it', function () {
     $branch = subBranch('HARB');
-    userWithRole(RoleName::BranchStaff, $branch);
+    userWithRole(RoleName::BranchManager, $branch);
 
     $this->actingAs($this->owner)
         ->delete("/admin/settings/branches/{$branch->id}")
@@ -109,7 +109,7 @@ it('will not let anyone delete their own account', function () {
 });
 
 it('deletes a person who has never moved stock', function () {
-    $person = userWithRole(RoleName::BranchStaff, subBranch());
+    $person = userWithRole(RoleName::BranchManager, subBranch());
 
     $this->actingAs($this->owner)
         ->delete("/admin/settings/users/{$person->id}")
@@ -137,7 +137,7 @@ it('refuses to delete a supplier that is on an order', function () {
 });
 
 it('keeps a branch user away from every delete', function () {
-    $staff = userWithRole(RoleName::BranchStaff, subBranch());
+    $staff = userWithRole(RoleName::BranchManager, subBranch());
     $item = kgItem('Onion');
 
     $this->actingAs($staff)->delete("/admin/settings/items/{$item->id}")->assertForbidden();

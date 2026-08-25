@@ -18,7 +18,7 @@ beforeEach(function () {
     $this->supplier = Supplier::create(['name' => 'Green Valley', 'is_active' => true]);
 
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park);
 });
 
 it('places an order without moving any stock', function () {

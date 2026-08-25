@@ -20,7 +20,7 @@ const form = useForm({
     phone: props.person?.phone ?? '',
     email: props.person?.email ?? '',
     branch_id: props.person?.branch_id ?? '',
-    role: props.person?.role ?? 'branch_staff',
+    role: props.person?.role ?? 'branch_manager',
     password: '',
     is_active: props.person?.is_active ?? true,
 });

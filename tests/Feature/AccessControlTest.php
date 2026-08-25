@@ -12,7 +12,7 @@ it('sends a signed-out visitor to sign in', function () {
 });
 
 it('refuses a branch user who types an admin address', function () {
-    $staff = userWithRole(RoleName::BranchStaff, subBranch());
+    $staff = userWithRole(RoleName::BranchManager, subBranch());
 
     $this->actingAs($staff)->get('/admin')->assertForbidden();
     $this->actingAs($staff)->get('/admin/requests')->assertForbidden();
@@ -38,7 +38,7 @@ it('lets the owner into the admin app', function () {
 });
 
 it('opens the branch app for branch people', function () {
-    $staff = userWithRole(RoleName::BranchStaff, subBranch());
+    $staff = userWithRole(RoleName::BranchManager, subBranch());
 
     $this->actingAs($staff)->get('/b')
         ->assertOk()

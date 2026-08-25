@@ -20,8 +20,8 @@ beforeEach(function () {
     giveStock($this->main, $this->onion, 25);
 
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
-    $this->parkStaff = userWithRole(RoleName::BranchStaff, $this->park);
-    $this->lakeStaff = userWithRole(RoleName::BranchStaff, $this->lake);
+    $this->parkStaff = userWithRole(RoleName::BranchManager, $this->park);
+    $this->lakeStaff = userWithRole(RoleName::BranchManager, $this->lake);
 });
 
 it('counts reserved stock as spoken for', function () {

@@ -18,7 +18,7 @@ beforeEach(function () {
     $this->park = subBranch('PARK');
     $this->onion = kgItem('Onion');
 
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park);
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
 
     giveStock($this->main, $this->onion, 100, 0.02);

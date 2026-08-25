@@ -7,7 +7,6 @@ enum RoleName: string
     case SuperAdmin = 'super_admin';
     case MainAdmin = 'main_admin';
     case BranchManager = 'branch_manager';
-    case BranchStaff = 'branch_staff';
 
     /** Plain-English name shown to people. Never the raw slug. */
     public function label(): string
@@ -16,7 +15,6 @@ enum RoleName: string
             self::SuperAdmin => 'Owner',
             self::MainAdmin => 'Main store admin',
             self::BranchManager => 'Branch manager',
-            self::BranchStaff => 'Branch staff',
         };
     }
 

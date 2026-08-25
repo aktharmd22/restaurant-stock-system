@@ -6,6 +6,7 @@ use App\Models\BranchItemSetting;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     seedRoles();
@@ -74,7 +75,7 @@ it('adds a person with a role and a branch', function () {
 });
 
 it('gives a person a new password the admin can read out', function () {
-    $staff = userWithRole(RoleName::BranchStaff, subBranch());
+    $staff = userWithRole(RoleName::BranchManager, subBranch());
     $before = $staff->password;
 
     $this->actingAs($this->owner)
@@ -164,11 +165,23 @@ it('keeps branch people out of every master screen', function () {
     expect(Category::where('name', 'Sneaky')->exists())->toBeFalse();
 });
 
-it('stops the main admin creating people, which is the owner\'s job', function () {
+/*
+ * Owner and Admin are deliberately equal. There are only two people running a
+ * restaurant's back office, and making one of them ask the other to add a
+ * phone number was friction rather than safety. The line that matters is the
+ * branch boundary, and that is the test above this one.
+ */
+it('lets the main admin do everything the owner can', function () {
     $admin = userWithRole(RoleName::MainAdmin, $this->main);
 
-    $this->actingAs($admin)->get('/admin/settings/users')->assertForbidden();
-
-    // But they can manage the catalogue.
+    $this->actingAs($admin)->get('/admin/settings/users')->assertOk();
+    $this->actingAs($admin)->get('/admin/settings/branches')->assertOk();
     $this->actingAs($admin)->get('/admin/settings/items')->assertOk();
+});
+
+it('has three jobs and no more', function () {
+    expect(RoleName::values())->toBe(['super_admin', 'main_admin', 'branch_manager']);
+
+    expect(Role::pluck('name')->sort()->values()->all())
+        ->toBe(['branch_manager', 'main_admin', 'super_admin']);
 });

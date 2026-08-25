@@ -12,7 +12,7 @@ beforeEach(function () {
     $this->onion = kgItem('Onion');
     giveStock($this->main, $this->onion, 100);
 
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park, ['phone' => '9000000201']);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park, ['phone' => '9000000201']);
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
 });
 
@@ -118,7 +118,7 @@ it('lets someone fix their own name and phone number', function () {
 });
 
 it('will not let two people share a phone number', function () {
-    $other = userWithRole(RoleName::BranchStaff, $this->park, ['phone' => '9000000999']);
+    $other = userWithRole(RoleName::BranchManager, $this->park, ['phone' => '9000000999']);
 
     $this->actingAs($this->staff)
         ->put('/settings/profile', ['name' => 'Someone', 'phone' => '9000000999'])
@@ -126,7 +126,7 @@ it('will not let two people share a phone number', function () {
 });
 
 it('lets someone change their own password', function () {
-    $user = userWithRole(RoleName::BranchStaff, $this->park, ['password' => 'old-password']);
+    $user = userWithRole(RoleName::BranchManager, $this->park, ['password' => 'old-password']);
 
     $this->actingAs($user)
         ->put('/password', [

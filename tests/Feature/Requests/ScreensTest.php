@@ -23,7 +23,7 @@ beforeEach(function () {
         'reorder_level' => 6000,
     ]);
 
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park);
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
 });
 
@@ -75,7 +75,7 @@ it('keeps one branch out of another branch\'s request', function () {
         ['item_id' => $this->onion->id, 'qty' => 5],
     ]);
 
-    $otherStaff = userWithRole(RoleName::BranchStaff, $this->lake);
+    $otherStaff = userWithRole(RoleName::BranchManager, $this->lake);
 
     // The global scope hides it entirely, which is better than confirming it
     // exists and refusing - a 403 would tell them the request is real.
@@ -258,7 +258,7 @@ it('never lets one branch confirm another branch\'s delivery', function () {
     $this->workflow->approveAll($request, $this->admin);
     $this->workflow->dispatch($request->fresh(), $this->admin);
 
-    $otherStaff = userWithRole(RoleName::BranchStaff, $this->lake);
+    $otherStaff = userWithRole(RoleName::BranchManager, $this->lake);
 
     $this->actingAs($otherStaff)
         ->post("/b/receive/{$request->id}", ['lines' => []])

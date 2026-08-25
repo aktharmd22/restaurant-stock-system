@@ -149,7 +149,7 @@ it('refuses a file that is not a spreadsheet', function () {
 });
 
 it('keeps a branch user out of the import', function () {
-    $staff = userWithRole(RoleName::BranchStaff, subBranch());
+    $staff = userWithRole(RoleName::BranchManager, subBranch());
 
     $this->actingAs($staff)->get('/admin/settings/items/template')->assertForbidden();
     $this->actingAs($staff)->post('/admin/settings/items/import')->assertForbidden();

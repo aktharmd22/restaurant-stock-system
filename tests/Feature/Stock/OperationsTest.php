@@ -16,7 +16,7 @@ beforeEach(function () {
 
     $this->onion = kgItem('Onion', ['storage_location' => 'Cold room']);
 
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park);
     $this->manager = userWithRole(RoleName::BranchManager, $this->park);
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
 
@@ -79,7 +79,7 @@ it('asks what happened before recording waste', function () {
 
 it('shows a branch only its own waste', function () {
     $lake = subBranch('LAKE');
-    $lakeStaff = userWithRole(RoleName::BranchStaff, $lake);
+    $lakeStaff = userWithRole(RoleName::BranchManager, $lake);
     giveStock($lake, $this->onion, 10);
 
     $this->actingAs($lakeStaff)->post('/waste', [

@@ -17,7 +17,7 @@ beforeEach(function () {
     $this->onion = kgItem('Onion');
     giveStock($this->main, $this->onion, 100, 0.02);
 
-    $this->staff = userWithRole(RoleName::BranchStaff, $this->park);
+    $this->staff = userWithRole(RoleName::BranchManager, $this->park);
     $this->admin = userWithRole(RoleName::MainAdmin, $this->main);
 });
 
