@@ -16,7 +16,7 @@ class Category extends Model
     use HasFactory, LogsActivity, SoftDeletes;
 
     /** @var list<string> */
-    protected $fillable = ['name', 'sort_order', 'is_active'];
+    protected $fillable = ['name', 'colour', 'sort_order', 'is_active'];
 
     /** @return array<string, string> */
     protected function casts(): array
@@ -44,6 +44,6 @@ class Category extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()->logOnly(['name', 'is_active'])->logOnlyDirty();
+        return LogOptions::defaults()->logOnly(['name', 'colour', 'is_active'])->logOnlyDirty();
     }
 }

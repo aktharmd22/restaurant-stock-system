@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeft, KeyRound, Plus } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 
 defineProps({
     people: { type: Array, required: true },
@@ -37,25 +37,29 @@ function newPassword(person) {
             Settings
         </Link>
 
-        <div class="space-y-2">
-            <SpineCard
-                v-for="person in people"
-                :key="person.id"
-                :status="person.is_active ? 'approved' : 'cancelled'"
-            >
-                <div class="flex flex-wrap items-start gap-3 p-card">
+        <Card :padded="false">
+            <div class="divide-y divide-line">
+                <div
+                    v-for="person in people"
+                    :key="person.id"
+                    class="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5"
+                    :class="person.is_active ? '' : 'opacity-60'"
+                >
                     <div class="min-w-0 flex-1">
-                        <p class="text-body font-medium text-ink">{{ person.name }}</p>
-
-                        <p class="mt-1 text-helper text-ink-soft">
-                            {{ person.role_label }} · {{ person.branch ?? 'No branch' }}
+                        <p class="truncate text-body font-medium text-ink">
+                            {{ person.name }}
+                            <span v-if="!person.is_active" class="text-helper text-ink-muted">
+                                · switched off
+                            </span>
                         </p>
 
-                        <p class="mt-1 text-helper tabular text-ink-soft">
-                            {{ person.phone }}<span v-if="person.email"> · {{ person.email }}</span>
+                        <p class="truncate text-helper text-ink-soft">
+                            {{ person.role_label }} · {{ person.branch ?? 'No branch' }} ·
+                            <span class="tabular">{{ person.phone }}</span>
+                            <span v-if="person.email"> · {{ person.email }}</span>
                         </p>
 
-                        <p class="mt-1 text-helper text-ink-muted">
+                        <p class="truncate text-helper text-ink-muted">
                             {{ person.last_login_at ? `Last signed in ${person.last_login_at}` : 'Never signed in' }}
                         </p>
                     </div>
@@ -65,7 +69,7 @@ function newPassword(person) {
                             Edit
                         </AppButton>
                         <AppButton variant="ghost" @click="newPassword(person)">
-                            <template #icon><KeyRound :size="20" /></template>
+                            <template #icon><KeyRound :size="16" /></template>
                             New password
                         </AppButton>
                         <AppButton variant="ghost" @click="toggle(person)">
@@ -73,8 +77,8 @@ function newPassword(person) {
                         </AppButton>
                     </div>
                 </div>
-            </SpineCard>
-        </div>
+            </div>
+        </Card>
 
         <p class="mt-4 max-w-3xl text-helper text-ink-soft">
             A new password is shown here once, so you can read it out to them.

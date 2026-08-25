@@ -8,10 +8,11 @@ import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
+import Card from '@/Components/ui/Card.vue';
+import ListRow from '@/Components/ui/ListRow.vue';
 import Skeleton from '@/Components/ui/Skeleton.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 import TextField from '@/Components/ui/TextField.vue';
 import { useToast } from '@/Composables/useToast';
 import { STATUS } from '@/Support/status';
@@ -77,31 +78,41 @@ const swatches = [
             <section class="rounded-card border border-line bg-surface p-card lg:p-card-lg">
                 <h2 class="text-heading text-ink">Status</h2>
                 <p class="mt-1 text-helper text-ink-soft">
-                    Every status shows a colour, an icon and a word.
+                    Every status shows a colour, an icon and a word. No coloured box: a page where
+                    every row shouts has no hierarchy left.
                 </p>
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <StatusPill v-for="status in statuses" :key="status" :status="status" />
+                <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+                    <StatusText v-for="status in statuses" :key="status" :status="status" />
                 </div>
             </section>
 
             <!-- The signature element -->
             <section>
-                <h2 class="mb-1 text-heading text-ink">Row cards</h2>
+                <h2 class="mb-1 text-heading text-ink">Lists</h2>
                 <p class="mb-3 text-helper text-ink-soft">
-                    The spine down the left edge carries the status. Readable from arm's length.
+                    One container, hairlines between rows, and a status dot in a fixed gutter so the
+                    eye can run down a single column and find the odd one out.
                 </p>
 
-                <div class="space-y-2">
-                    <SpineCard v-for="status in ['waiting', 'approved', 'partial', 'rejected', 'sent']" :key="status" :status="status">
-                        <div class="flex items-center justify-between gap-3 p-card">
-                            <div>
-                                <p class="text-body font-medium text-ink">Wednesday, 12 items</p>
-                                <p class="text-helper text-ink-soft">Sent 9:14 am</p>
-                            </div>
-                            <StatusPill :status="status" />
-                        </div>
-                    </SpineCard>
-                </div>
+                <Card :padded="false">
+                    <div class="divide-y divide-line">
+                        <ListRow
+                            v-for="status in ['waiting', 'approved', 'partial', 'rejected', 'sent']"
+                            :key="status"
+                            :status="status"
+                            href="/design"
+                        >
+                            <span class="block text-body font-medium text-ink">Wednesday, 12 items</span>
+                            <span class="block text-helper text-ink-soft">Sent 9:14 am</span>
+
+                            <template #end>
+                                <span class="flex w-[124px] justify-end">
+                                    <StatusText :status="status" size="sm" />
+                                </span>
+                            </template>
+                        </ListRow>
+                    </div>
+                </Card>
             </section>
 
             <!-- Numbers -->

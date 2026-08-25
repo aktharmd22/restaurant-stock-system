@@ -5,7 +5,7 @@ import { ChevronLeft, Phone, Plus } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
 defineProps({
@@ -66,28 +66,34 @@ function toggle(supplier) {
             Purchase
         </Link>
 
-        <div class="space-y-2">
-            <SpineCard
-                v-for="supplier in suppliers"
-                :key="supplier.id"
-                :status="supplier.is_active ? 'approved' : 'cancelled'"
-            >
-                <div class="flex flex-wrap items-start gap-3 p-card">
+        <Card :padded="false">
+            <div class="divide-y divide-line">
+                <div
+                    v-for="supplier in suppliers"
+                    :key="supplier.id"
+                    class="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5"
+                    :class="supplier.is_active ? '' : 'opacity-60'"
+                >
                     <div class="min-w-0 flex-1">
-                        <p class="text-body font-medium text-ink">{{ supplier.name }}</p>
-                        <p class="text-helper text-ink-soft">
+                        <p class="truncate text-body font-medium text-ink">
+                            {{ supplier.name }}
+                            <span v-if="!supplier.is_active" class="text-helper text-ink-muted">
+                                · switched off
+                            </span>
+                        </p>
+                        <p class="truncate text-helper text-ink-soft">
                             {{ supplier.contact_person ?? 'No contact name' }}
                             <span v-if="supplier.address"> · {{ supplier.address }}</span>
+                            · {{ supplier.orders }} orders
                         </p>
                         <a
                             v-if="supplier.phone"
                             :href="`tel:${supplier.phone}`"
-                            class="mt-1 inline-flex min-h-touch items-center gap-2 text-body text-primary"
+                            class="inline-flex min-h-touch items-center gap-2 text-body text-primary"
                         >
-                            <Phone :size="18" />
+                            <Phone :size="16" />
                             {{ supplier.phone }}
                         </a>
-                        <p class="text-helper text-ink-muted">{{ supplier.orders }} orders</p>
                     </div>
 
                     <div class="flex shrink-0 gap-2">
@@ -97,8 +103,8 @@ function toggle(supplier) {
                         </AppButton>
                     </div>
                 </div>
-            </SpineCard>
-        </div>
+            </div>
+        </Card>
 
         <BottomSheet
             :open="sheetOpen"

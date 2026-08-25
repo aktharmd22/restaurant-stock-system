@@ -1,11 +1,11 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ChevronLeft, Phone } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 
 const props = defineProps({
     order: { type: Object, required: true },
@@ -59,7 +59,7 @@ function receive() {
                             </p>
                         </div>
 
-                        <StatusPill :status="order.tone" :label="order.status_label" size="lg" />
+                        <StatusText :status="order.tone" :label="order.status_label" />
                     </div>
 
                     <p v-if="order.note" class="mt-3 text-body text-ink-soft">"{{ order.note }}"</p>

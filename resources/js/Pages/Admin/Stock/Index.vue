@@ -5,8 +5,8 @@ import { ClipboardCheck, Search, TrendingDown } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import Card from '@/Components/ui/Card.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
 
 const props = defineProps({
@@ -131,40 +131,48 @@ function startCount() {
             </table>
         </div>
 
-        <!-- Phone: the same numbers as cards. Never a sideways scroll. -->
-        <div v-if="rows.length" class="mt-4 space-y-2 lg:hidden">
-            <SpineCard v-for="row in rows" :key="row.id" :status="row.is_low ? 'low' : 'approved'">
-                <div class="p-card">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p class="text-body font-medium text-ink">{{ row.name }}</p>
-                            <p class="text-helper text-ink-soft">{{ row.category }}</p>
+        <!-- Phone: the same numbers, one list. Never a sideways scroll. -->
+        <div v-if="rows.length" class="mt-4 lg:hidden">
+            <Card :padded="false">
+                <div class="divide-y divide-line">
+                    <div v-for="row in rows" :key="row.id" class="px-4 py-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="truncate text-body font-medium text-ink">{{ row.name }}</p>
+                                <p class="truncate text-helper text-ink-soft">{{ row.category }}</p>
+                            </div>
+                            <p
+                                class="shrink-0 text-qty tabular"
+                                :class="row.is_low ? 'text-partial' : 'text-ink'"
+                            >
+                                {{ row.on_hand_text }}
+                            </p>
                         </div>
-                        <p class="shrink-0 text-qty tabular" :class="row.is_low ? 'text-partial' : 'text-ink'">
-                            {{ row.on_hand_text }}
-                        </p>
-                    </div>
 
-                    <dl class="mt-3 grid grid-cols-3 gap-2 text-center">
-                        <div v-if="branch.is_main" class="rounded-control bg-page py-2">
-                            <dt class="text-helper text-ink-soft">Set aside</dt>
-                            <dd class="text-body tabular text-ink">{{ row.reserved_text }}</dd>
-                        </div>
-                        <div v-if="branch.is_main" class="rounded-control bg-page py-2">
-                            <dt class="text-helper text-ink-soft">Free</dt>
-                            <dd class="text-body tabular text-ink">{{ row.available_text }}</dd>
-                        </div>
-                        <div class="rounded-control bg-page py-2">
-                            <dt class="text-helper text-ink-soft">Full shelf</dt>
-                            <dd class="text-body tabular text-ink">{{ row.par_text ?? '—' }}</dd>
-                        </div>
-                        <div v-if="row.use_by" class="rounded-control bg-page py-2">
-                            <dt class="text-helper text-ink-soft">Use by</dt>
-                            <dd class="text-body tabular text-ink">{{ row.use_by }}</dd>
-                        </div>
-                    </dl>
+                        <!-- The rest of the numbers as one quiet line, rather
+                             than four boxes competing with the name. -->
+                        <dl class="mt-1 flex flex-wrap gap-x-4 text-helper text-ink-soft">
+                            <div v-if="branch.is_main" class="flex gap-1">
+                                <dt>Set aside</dt>
+                                <dd class="tabular text-ink">{{ row.reserved_text }}</dd>
+                            </div>
+                            <div v-if="branch.is_main" class="flex gap-1">
+                                <dt>Free</dt>
+                                <dd class="tabular text-ink">{{ row.available_text }}</dd>
+                            </div>
+                            <div class="flex gap-1">
+                                <dt>Full shelf</dt>
+                                <dd class="tabular text-ink">{{ row.par_text ?? '—' }}</dd>
+                            </div>
+                            <div v-if="row.use_by" class="flex gap-1">
+                                <dt>Use by</dt>
+                                <dd class="tabular text-ink">{{ row.use_by }}</dd>
+                            </div>
+                            <span v-if="row.is_low" class="font-medium text-partial">Running low</span>
+                        </dl>
+                    </div>
                 </div>
-            </SpineCard>
+            </Card>
         </div>
 
         <EmptyState

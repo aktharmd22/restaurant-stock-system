@@ -7,7 +7,7 @@ import Card from '@/Components/ui/Card.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
 const props = defineProps({
@@ -157,7 +157,7 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
                                 </td>
                                 <td class="px-card py-2.5 text-ink">{{ row.branch }}</td>
                                 <td class="px-card py-2.5">
-                                    <StatusPill :status="row.tone" :label="row.what" />
+                                    <StatusText :status="row.tone" :label="row.what" size="sm" />
                                 </td>
                                 <td
                                     class="whitespace-nowrap px-card py-2.5 text-right tabular font-medium"
@@ -202,7 +202,7 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
                         </div>
 
                         <div class="mt-2 flex flex-wrap items-center gap-2">
-                            <StatusPill :status="row.tone" :label="row.what" />
+                            <StatusText :status="row.tone" :label="row.what" size="sm" />
                             <span class="text-helper text-ink-soft">
                                 left {{ row.balance_after }} · {{ row.who }}
                             </span>

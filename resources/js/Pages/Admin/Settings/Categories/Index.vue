@@ -5,8 +5,9 @@ import { ChevronLeft, Plus } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 import TextField from '@/Components/ui/TextField.vue';
+import { COLOUR_OPTIONS, categoryColour } from '@/Support/categoryColours';
 
 defineProps({
     categories: { type: Array, required: true },
@@ -15,7 +16,9 @@ defineProps({
 const sheetOpen = ref(false);
 const editing = ref(null);
 
-const form = useForm({ name: '', sort_order: 0 });
+const form = useForm({ name: '', colour: 'slate', sort_order: 0 });
+
+const colourOptions = COLOUR_OPTIONS;
 
 function openNew() {
     editing.value = null;
@@ -27,6 +30,7 @@ function openNew() {
 function openEdit(category) {
     editing.value = category;
     form.name = category.name;
+    form.colour = category.colour ?? 'slate';
     form.sort_order = category.sort_order;
     form.clearErrors();
     sheetOpen.value = true;
@@ -69,16 +73,28 @@ function toggle(category) {
             Settings
         </Link>
 
-        <div class="max-w-4xl space-y-2">
-            <SpineCard
-                v-for="category in categories"
-                :key="category.id"
-                :status="category.is_active ? 'approved' : 'cancelled'"
-            >
-                <div class="flex items-center gap-3 p-card">
+        <Card class="max-w-4xl" :padded="false">
+            <div class="divide-y divide-line">
+                <div
+                    v-for="category in categories"
+                    :key="category.id"
+                    class="flex items-center gap-3 px-4 py-3 sm:px-5"
+                    :class="category.is_active ? '' : 'opacity-60'"
+                >
+                    <span
+                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-control"
+                        :class="categoryColour(category.colour).chip"
+                        aria-hidden="true"
+                    >
+                        <span class="h-2.5 w-2.5 rounded-full" :class="categoryColour(category.colour).dot" />
+                    </span>
+
                     <div class="min-w-0 flex-1">
-                        <p class="text-body font-medium text-ink">{{ category.name }}</p>
-                        <p class="text-helper text-ink-soft">{{ category.items }} items</p>
+                        <p class="truncate text-body font-medium text-ink">{{ category.name }}</p>
+                        <p class="text-helper text-ink-soft">
+                            {{ category.items }} items
+                            <span v-if="!category.is_active"> · hidden</span>
+                        </p>
                     </div>
 
                     <AppButton variant="secondary" @click="openEdit(category)">Edit</AppButton>
@@ -86,8 +102,8 @@ function toggle(category) {
                         {{ category.is_active ? 'Hide' : 'Show' }}
                     </AppButton>
                 </div>
-            </SpineCard>
-        </div>
+            </div>
+        </Card>
 
         <BottomSheet
             :open="sheetOpen"
@@ -97,6 +113,33 @@ function toggle(category) {
         >
             <div class="space-y-4">
                 <TextField v-model="form.name" label="Group name" :error="form.errors.name" />
+                <div>
+                    <label class="mb-1.5 block text-helper text-ink-soft">Colour</label>
+                    <p class="mb-2 text-helper text-ink-muted">
+                        Branch staff find things by colour before they read the name.
+                    </p>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            v-for="option in colourOptions"
+                            :key="option.value"
+                            type="button"
+                            class="flex min-h-touch items-center gap-2 rounded-control px-3 text-body transition"
+                            :class="[
+                                categoryColour(option.value).chip,
+                                form.colour === option.value
+                                    ? 'font-medium ring-2 ring-inset ring-current'
+                                    : 'opacity-70 hover:opacity-100',
+                            ]"
+                            :aria-pressed="form.colour === option.value"
+                            @click="form.colour = option.value"
+                        >
+                            <span class="h-2.5 w-2.5 rounded-full" :class="option.swatch" aria-hidden="true" />
+                            {{ option.label }}
+                        </button>
+                    </div>
+                </div>
+
                 <TextField
                     v-model="form.sort_order"
                     label="Order on screen"

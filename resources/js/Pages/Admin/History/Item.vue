@@ -6,7 +6,7 @@ import Card from '@/Components/ui/Card.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 
 const props = defineProps({
     item: { type: Object, required: true },
@@ -70,7 +70,7 @@ function pickBranch(id) {
                 >
                     <p class="w-40 shrink-0 text-helper text-ink-soft">{{ row.when }}</p>
 
-                    <StatusPill :status="row.tone" :label="row.what" />
+                    <StatusText :status="row.tone" :label="row.what" size="sm" />
 
                     <p
                         class="w-24 shrink-0 text-right text-body tabular font-medium"

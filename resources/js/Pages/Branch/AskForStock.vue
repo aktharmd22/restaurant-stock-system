@@ -9,6 +9,7 @@ import QtyStepper from '@/Components/ui/QtyStepper.vue';
 import TextField from '@/Components/ui/TextField.vue';
 import { useOfflineQueue } from '@/Composables/useOfflineQueue';
 import { useToast } from '@/Composables/useToast';
+import { categoryColour } from '@/Support/categoryColours';
 
 const props = defineProps({
     items: { type: Array, required: true },
@@ -82,6 +83,11 @@ function qtyFor(item) {
 
 function setQty(item, value) {
     quantities.value[item.id] = value;
+}
+
+/** Takes the item back out of the request entirely. */
+function remove(item) {
+    delete quantities.value[item.id];
 }
 
 /** Most days a kitchen orders close to the same thing. */
@@ -232,14 +238,19 @@ function send() {
                     v-for="category in categories"
                     :key="category.id"
                     type="button"
-                    class="min-h-touch shrink-0 rounded-full border px-3.5 text-body transition"
+                    class="flex min-h-touch shrink-0 items-center gap-2 rounded-full px-3.5 text-body transition"
                     :class="
                         activeCategory === category.id
-                            ? 'border-primary bg-primary-light font-medium text-primary'
-                            : 'border-line bg-surface text-ink-soft hover:text-ink'
+                            ? `${categoryColour(category.colour).chip} font-medium ring-2 ring-inset ring-current`
+                            : `${categoryColour(category.colour).chip} opacity-75 hover:opacity-100`
                     "
                     @click="activeCategory = activeCategory === category.id ? null : category.id"
                 >
+                    <span
+                        class="h-2 w-2 rounded-full"
+                        :class="categoryColour(category.colour).dot"
+                        aria-hidden="true"
+                    />
                     {{ category.name }}
                 </button>
             </div>
@@ -251,12 +262,13 @@ function send() {
             <div
                 v-for="item in visibleItems"
                 :key="item.id"
-                class="rounded-card border bg-surface p-3 transition"
-                :class="
+                class="rounded-card p-3 transition"
+                :class="[
+                    categoryColour(item.colour).card,
                     qtyFor(item) > 0
-                        ? 'border-primary ring-1 ring-primary/20'
-                        : 'border-line hover:border-ink-muted/40'
-                "
+                        ? `shadow-card ring-2 ring-inset ${categoryColour(item.colour).ring}`
+                        : '',
+                ]"
             >
                 <!-- The name gets a row of its own. Sharing one with the
                      stepper truncated it on anything narrower than a table. -->
@@ -270,7 +282,8 @@ function send() {
                     />
                     <span
                         v-else
-                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-page text-ink-muted"
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-surface/70"
+                        :class="categoryColour(item.colour).text"
                         aria-hidden="true"
                     >
                         <Package :size="18" />
@@ -288,25 +301,35 @@ function send() {
 
                     <span
                         v-if="item.is_low"
-                        class="shrink-0 rounded-full bg-partial-bg px-2 py-0.5 text-micro font-medium text-partial"
+                        class="shrink-0 rounded-full bg-surface px-2 py-0.5 text-micro font-medium text-partial"
                     >
                         Low
                     </span>
                 </div>
 
                 <div class="mt-2.5 flex items-center justify-between gap-2">
+                    <!-- Taking something back out should be one tap, not
+                         winding the stepper down to nothing. -->
+                    <button
+                        v-if="qtyFor(item) > 0"
+                        type="button"
+                        class="-ml-2 flex min-h-touch min-w-0 items-center gap-1 rounded-control px-2 text-helper font-medium transition hover:bg-surface/70"
+                        :class="categoryColour(item.colour).text"
+                        @click="remove(item)"
+                    >
+                        <X :size="14" stroke-width="2.5" class="shrink-0" />
+                        Remove
+                    </button>
                     <span
-                        v-if="item.suggested > 0 && qtyFor(item) === 0"
-                        class="truncate text-helper text-ink-muted"
+                        v-else-if="item.suggested > 0"
+                        class="truncate text-helper text-ink-soft"
                     >
                         Suggest {{ item.suggested }} {{ item.unit }}
                     </span>
-                    <span v-else-if="qtyFor(item) > 0" class="truncate text-helper text-primary">
-                        Asking for this
-                    </span>
-                    <span v-else class="text-helper text-ink-muted">Enough here</span>
+                    <span v-else class="truncate text-helper text-ink-muted">Enough here</span>
 
                     <QtyStepper
+                        class="bg-surface"
                         :model-value="qtyFor(item)"
                         :step="item.step"
                         :decimals="item.decimals"

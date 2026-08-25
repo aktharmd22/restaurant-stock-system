@@ -6,7 +6,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 
 const props = defineProps({
     items: { type: Object, required: true },
@@ -91,50 +91,58 @@ function toggle(item) {
                 </button>
             </div>
 
-            <div v-if="items.data.length" class="mt-4 space-y-2">
-                <SpineCard
-                    v-for="item in items.data"
-                    :key="item.id"
-                    :status="item.is_active ? 'approved' : 'cancelled'"
-                >
-                    <div class="flex flex-wrap items-center gap-3 p-card">
-                        <img
-                            v-if="item.photo"
-                            :src="item.photo"
-                            :alt="item.name"
-                            loading="lazy"
-                            class="h-12 w-12 shrink-0 rounded-control border border-line object-cover"
-                        />
-                        <span
-                            v-else
-                            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-control border border-line bg-page text-ink-muted"
+            <div v-if="items.data.length" class="mt-4">
+                <Card :padded="false">
+                    <div class="divide-y divide-line">
+                        <div
+                            v-for="item in items.data"
+                            :key="item.id"
+                            class="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5"
+                            :class="item.is_active ? '' : 'opacity-60'"
                         >
-                            <Package :size="20" aria-hidden="true" />
-                        </span>
+                            <img
+                                v-if="item.photo"
+                                :src="item.photo"
+                                :alt="item.name"
+                                loading="lazy"
+                                class="h-10 w-10 shrink-0 rounded-control border border-line object-cover"
+                            />
+                            <span
+                                v-else
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-page text-ink-muted"
+                            >
+                                <Package :size="18" aria-hidden="true" />
+                            </span>
 
-                        <div class="min-w-0 flex-1">
-                            <p class="text-body font-medium text-ink">{{ item.name }}</p>
-                            <p class="text-helper text-ink-soft">
-                                {{ item.category }} · sold by {{ item.unit }}
-                                <span class="text-ink-muted">
-                                    (1 {{ item.unit }} = {{ item.conversion }} {{ item.base_unit }})
-                                </span>
-                            </p>
-                            <p v-if="item.storage_location" class="text-helper text-ink-muted">
-                                {{ item.storage_location }}
-                            </p>
-                        </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-body font-medium text-ink">
+                                    {{ item.name }}
+                                    <span v-if="!item.is_active" class="text-helper text-ink-muted">
+                                        · hidden
+                                    </span>
+                                </p>
+                                <p class="truncate text-helper text-ink-soft">
+                                    {{ item.category }} · sold by {{ item.unit }}
+                                    <span class="text-ink-muted">
+                                        (1 {{ item.unit }} = {{ item.conversion }} {{ item.base_unit }})
+                                    </span>
+                                    <span v-if="item.storage_location" class="text-ink-muted">
+                                        · {{ item.storage_location }}
+                                    </span>
+                                </p>
+                            </div>
 
-                        <div class="flex shrink-0 gap-2">
-                            <AppButton variant="secondary" :href="`/admin/settings/items/${item.id}/edit`">
-                                Edit
-                            </AppButton>
-                            <AppButton variant="ghost" @click="toggle(item)">
-                                {{ item.is_active ? 'Hide' : 'Show' }}
-                            </AppButton>
+                            <div class="flex shrink-0 gap-2">
+                                <AppButton variant="secondary" :href="`/admin/settings/items/${item.id}/edit`">
+                                    Edit
+                                </AppButton>
+                                <AppButton variant="ghost" @click="toggle(item)">
+                                    {{ item.is_active ? 'Hide' : 'Show' }}
+                                </AppButton>
+                            </div>
                         </div>
                     </div>
-                </SpineCard>
+                </Card>
 
                 <Pagination :links="items.links" :meta="items" />
             </div>

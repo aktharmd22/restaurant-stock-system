@@ -9,7 +9,7 @@ import Card from '@/Components/ui/Card.vue';
 import DonutChart from '@/Components/ui/DonutChart.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 
 const props = defineProps({
     stats: { type: Object, required: true },
@@ -157,8 +157,10 @@ const tiles = {
                             </span>
                         </span>
 
-                        <StatusPill v-if="request.is_late" status="late" />
-                        <StatusPill :status="request.status" />
+                        <StatusText v-if="request.is_late" status="late" size="sm" />
+                        <span class="flex w-[124px] justify-end">
+                            <StatusText :status="request.status" size="sm" />
+                        </span>
                     </Link>
                 </div>
 
@@ -237,8 +239,10 @@ const tiles = {
                             <td class="px-card py-2.5 text-right tabular text-ink">
                                 {{ request.item_count }}
                             </td>
-                            <td class="px-card py-2.5 text-right">
-                                <StatusPill :status="request.status" />
+                            <td class="px-card py-2.5">
+                                <span class="flex justify-end">
+                                    <StatusText :status="request.status" size="sm" />
+                                </span>
                             </td>
                         </tr>
                     </tbody>
@@ -262,7 +266,7 @@ const tiles = {
                             {{ request.sent_at_text }}
                         </span>
                     </span>
-                    <StatusPill :status="request.status" />
+                    <StatusText :status="request.status" size="sm" />
                 </Link>
             </div>
 

@@ -9,8 +9,8 @@ import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
+import Card from '@/Components/ui/Card.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
 const props = defineProps({
@@ -65,37 +65,45 @@ function save() {
             </AppButton>
         </template>
 
-        <div v-if="entries.data.length" class="space-y-2">
-            <SpineCard v-for="entry in entries.data" :key="entry.id" status="rejected">
-                <div class="flex items-start gap-3 p-card">
-                    <img
-                        v-if="entry.photo"
-                        :src="entry.photo"
-                        alt=""
-                        loading="lazy"
-                        class="h-14 w-14 shrink-0 rounded-control border border-line object-cover"
-                    />
-                    <span
-                        v-else
-                        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-rejected-bg text-rejected"
+        <div v-if="entries.data.length">
+            <Card :padded="false">
+                <div class="divide-y divide-line">
+                    <div
+                        v-for="entry in entries.data"
+                        :key="entry.id"
+                        class="flex items-start gap-3 px-4 py-3 sm:px-5"
                     >
-                        <Trash2 :size="20" aria-hidden="true" />
-                    </span>
+                        <img
+                            v-if="entry.photo"
+                            :src="entry.photo"
+                            alt=""
+                            loading="lazy"
+                            class="h-10 w-10 shrink-0 rounded-control border border-line object-cover"
+                        />
+                        <span
+                            v-else
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-rejected-bg text-rejected"
+                        >
+                            <Trash2 :size="16" aria-hidden="true" />
+                        </span>
 
-                    <div class="min-w-0 flex-1">
-                        <p class="text-body font-medium text-ink">
-                            {{ entry.item }} · <span class="tabular">{{ entry.qty_text }}</span>
-                        </p>
-                        <p class="text-helper text-ink-soft">
-                            {{ entry.reason }}<span v-if="entry.note"> · {{ entry.note }}</span>
-                        </p>
-                        <p class="text-helper text-ink-muted">
-                            {{ entry.when }} · {{ entry.by }}
-                            <span v-if="entry.branch && user.is_admin_side"> · {{ entry.branch }}</span>
-                        </p>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-body text-ink">
+                                <span class="font-medium">{{ entry.item }}</span>
+                                <span class="text-ink-soft"> · </span>
+                                <span class="tabular">{{ entry.qty_text }}</span>
+                            </p>
+                            <p class="truncate text-helper text-ink-soft">
+                                {{ entry.reason }}<span v-if="entry.note"> · {{ entry.note }}</span>
+                            </p>
+                            <p class="truncate text-helper text-ink-muted">
+                                {{ entry.when }} · {{ entry.by }}
+                                <span v-if="entry.branch && user.is_admin_side"> · {{ entry.branch }}</span>
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </SpineCard>
+            </Card>
 
             <Pagination :links="entries.links" :meta="entries" />
         </div>

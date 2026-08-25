@@ -4,7 +4,7 @@ import { ChevronLeft } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 
 defineProps({
     rows: { type: Array, required: true },
@@ -33,24 +33,29 @@ defineProps({
             here. This is what you would need to cover everyone today.
         </p>
 
-        <div v-if="rows.length" class="space-y-2">
-            <SpineCard v-for="row in rows" :key="row.id" status="low">
-                <div class="flex flex-wrap items-center gap-3 p-card">
+        <Card v-if="rows.length" :padded="false">
+            <div class="divide-y divide-line">
+                <div
+                    v-for="row in rows"
+                    :key="row.id"
+                    class="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5"
+                >
                     <div class="min-w-0 flex-1">
-                        <p class="text-body font-medium text-ink">{{ row.name }}</p>
-                        <p class="text-helper text-ink-soft">
-                            {{ row.category }} · <span class="tabular">{{ row.free_at_main_text }}</span> free here
-                            · branches need <span class="tabular">{{ row.branches_need_text }}</span>
+                        <p class="truncate text-body font-medium text-ink">{{ row.name }}</p>
+                        <p class="truncate text-helper text-ink-soft">
+                            {{ row.category }} ·
+                            <span class="tabular">{{ row.free_at_main_text }}</span> free here ·
+                            branches need <span class="tabular">{{ row.branches_need_text }}</span>
                         </p>
                     </div>
 
                     <div class="shrink-0 text-right">
                         <p class="text-helper text-ink-soft">Buy about</p>
-                        <p class="text-qty tabular text-partial">{{ row.suggested_text }}</p>
+                        <p class="text-body tabular font-medium text-partial">{{ row.suggested_text }}</p>
                     </div>
                 </div>
-            </SpineCard>
-        </div>
+            </div>
+        </Card>
 
         <EmptyState
             v-else

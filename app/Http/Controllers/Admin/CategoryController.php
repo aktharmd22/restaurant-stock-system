@@ -21,6 +21,7 @@ class CategoryController extends Controller
                 ->map(fn (Category $category) => [
                     'id' => $category->id,
                     'name' => $category->name,
+                    'colour' => $category->colour,
                     'sort_order' => $category->sort_order,
                     'is_active' => $category->is_active,
                     'items' => $category->items_count,
@@ -64,6 +65,7 @@ class CategoryController extends Controller
                 'required', 'string', 'max:40',
                 Rule::unique('categories', 'name')->ignore($category?->id)->whereNull('deleted_at'),
             ],
+            'colour' => ['nullable', 'string', 'in:green,rose,amber,orange,blue,violet,cyan,slate'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:999'],
         ], [
             'name.required' => 'Enter a group name.',

@@ -1,16 +1,17 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { Camera, Plus, ShoppingCart } from 'lucide-vue-next';
+import { Camera, Plus, Receipt } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import BranchLayout from '@/Layouts/BranchLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
+import Card from '@/Components/ui/Card.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import ListRow from '@/Components/ui/ListRow.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
 const props = defineProps({
@@ -33,6 +34,19 @@ const form = useForm({ item_id: '', qty: 1, amount: '', reason: '', bill: null }
 
 const tone = { waiting: 'waiting', approved: 'approved', rejected: 'rejected' };
 const label = { waiting: 'Waiting', approved: 'Approved', rejected: 'Not approved' };
+
+// Anything still waiting is the only thing here that needs a decision.
+const waiting = computed(() => props.purchases.data.filter((p) => p.status === 'waiting'));
+const decided = computed(() => props.purchases.data.filter((p) => p.status !== 'waiting'));
+
+// Paise only show when there are any, so a round bill is not "₹42.00".
+const money = (value) => {
+    const amount = Number(value);
+    return `${props.currency}${amount.toLocaleString('en-IN', {
+        minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+        maximumFractionDigits: 2,
+    })}`;
+};
 
 function pickBill(event) {
     form.bill = event.target.files?.[0] ?? null;
@@ -69,81 +83,114 @@ function reject() {
 </script>
 
 <template>
-    <component :is="Layout" title="Bought locally" :back="user.is_admin_side ? undefined : '/b/more'">
+    <component
+        :is="Layout"
+        title="Bought locally"
+        subtitle="Emergency buys. Stock only moves once the main store approves."
+        :back="user.is_admin_side ? undefined : '/b/more'"
+    >
         <Head title="Bought locally" />
 
-        <template v-if="canRequest" #header-action>
-            <AppButton @click="sheetOpen = true">
-                <template #icon><Plus :size="20" /></template>
+        <template v-if="canRequest" #action>
+            <AppButton size="lg" class="w-full lg:w-auto" @click="sheetOpen = true">
+                <template #icon><Plus :size="16" /></template>
                 Add a bill
             </AppButton>
         </template>
 
-        <p class="mb-4 max-w-2xl text-body text-ink-soft">
-            When a branch has to buy something itself, record it here with a photo of the bill. Stock
-            only moves once the main store approves it.
-        </p>
+        <template v-if="purchases.data.length">
+            <!-- Needs a decision. Actions live on the row, not in a card each. -->
+            <Card v-if="waiting.length" :padded="false" :title="`${waiting.length} waiting on you`">
+                <div class="divide-y divide-line">
+                    <div v-for="purchase in waiting" :key="purchase.id" class="px-4 py-3 sm:px-5">
+                        <div class="flex flex-wrap items-start gap-x-4 gap-y-2">
+                            <a
+                                v-if="purchase.bill"
+                                :href="purchase.bill"
+                                target="_blank"
+                                rel="noopener"
+                                class="shrink-0"
+                            >
+                                <img
+                                    :src="purchase.bill"
+                                    alt="Bill"
+                                    loading="lazy"
+                                    class="h-10 w-10 rounded-control border border-line object-cover"
+                                />
+                            </a>
+                            <span
+                                v-else
+                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-page text-ink-muted"
+                            >
+                                <Receipt :size="16" aria-hidden="true" />
+                            </span>
 
-        <div v-if="purchases.data.length" class="space-y-2">
-            <SpineCard v-for="purchase in purchases.data" :key="purchase.id" :status="tone[purchase.status]">
-                <div class="p-card">
-                    <div class="flex items-start gap-3">
-                        <a
-                            v-if="purchase.bill"
-                            :href="purchase.bill"
-                            target="_blank"
-                            rel="noopener"
-                            class="shrink-0"
-                        >
-                            <img
-                                :src="purchase.bill"
-                                alt="Bill"
-                                loading="lazy"
-                                class="h-14 w-14 rounded-control border border-line object-cover"
-                            />
-                        </a>
-                        <span
-                            v-else
-                            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-control bg-page text-ink-muted"
-                        >
-                            <ShoppingCart :size="20" aria-hidden="true" />
-                        </span>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-body text-ink">
+                                    <span class="font-medium">{{ purchase.item }}</span>
+                                    <span class="text-ink-soft"> · {{ purchase.qty_text }}</span>
+                                </p>
+                                <p class="truncate text-helper text-ink-soft">{{ purchase.reason }}</p>
+                                <p class="truncate text-helper text-ink-muted">
+                                    {{ purchase.when }} · {{ purchase.by }}
+                                    <span v-if="purchase.branch && user.is_admin_side">· {{ purchase.branch }}</span>
+                                </p>
+                            </div>
 
-                        <div class="min-w-0 flex-1">
-                            <p class="text-body font-medium text-ink">
-                                {{ purchase.item }} · <span class="tabular">{{ purchase.qty_text }}</span>
-                                <span class="tabular text-ink-soft">
-                                    · {{ currency }}{{ purchase.amount.toLocaleString('en-IN') }}
-                                </span>
-                            </p>
-                            <p class="text-helper text-ink-soft">{{ purchase.reason }}</p>
-                            <p class="text-helper text-ink-muted">
-                                {{ purchase.when }} · {{ purchase.by }}
-                                <span v-if="purchase.branch && user.is_admin_side"> · {{ purchase.branch }}</span>
-                            </p>
-                            <p v-if="purchase.decision_note" class="mt-1 text-helper text-partial">
-                                {{ purchase.decision_note }}
-                            </p>
+                            <p class="shrink-0 text-qty tabular text-ink">{{ money(purchase.amount) }}</p>
                         </div>
 
-                        <StatusPill :status="tone[purchase.status]" :label="label[purchase.status]" />
-                    </div>
-
-                    <div v-if="canDecide && purchase.status === 'waiting'" class="mt-3 flex flex-wrap gap-2">
-                        <AppButton @click="approve(purchase)">Approve and add to stock</AppButton>
-                        <AppButton variant="danger" @click="rejecting = purchase">Not approved</AppButton>
+                        <div v-if="canDecide" class="mt-2.5 flex flex-wrap gap-2 pl-14">
+                            <AppButton @click="approve(purchase)">Approve and add to stock</AppButton>
+                            <AppButton variant="ghost" @click="rejecting = purchase">Not approved</AppButton>
+                        </div>
                     </div>
                 </div>
-            </SpineCard>
+            </Card>
+
+            <!-- Already decided. Quiet, because nothing here needs doing. -->
+            <Card v-if="decided.length" class="mt-4" :padded="false" title="Already decided">
+                <div class="divide-y divide-line">
+                    <ListRow
+                        v-for="purchase in decided"
+                        :key="purchase.id"
+                        :status="tone[purchase.status]"
+                        :chevron="false"
+                    >
+                        <span class="block truncate text-body text-ink">
+                            <span class="font-medium">{{ purchase.item }}</span>
+                            <span class="text-ink-soft"> · {{ purchase.qty_text }}</span>
+                        </span>
+                        <span class="mt-0.5 block truncate text-helper text-ink-muted">
+                            {{ purchase.when }} · {{ purchase.by }}
+                            <span v-if="purchase.branch && user.is_admin_side">· {{ purchase.branch }}</span>
+                            <span v-if="purchase.decision_note"> · {{ purchase.decision_note }}</span>
+                        </span>
+
+                        <template #end>
+                            <span class="w-20 text-right text-body tabular text-ink">
+                                {{ money(purchase.amount) }}
+                            </span>
+                            <span class="flex w-[116px] justify-end">
+                                <StatusText
+                                    :status="tone[purchase.status]"
+                                    :label="label[purchase.status]"
+                                    size="sm"
+                                />
+                            </span>
+                        </template>
+                    </ListRow>
+                </div>
+            </Card>
 
             <Pagination :links="purchases.links" :meta="purchases" />
-        </div>
+        </template>
 
         <EmptyState
             v-else
             icon="ShoppingCart"
             title="Nothing bought locally"
-            message="Emergency buys show up here with their bills."
+            message="When a branch has to buy something itself, it lands here with a photo of the bill."
         >
             <template v-if="canRequest" #action>
                 <AppButton @click="sheetOpen = true">Add a bill</AppButton>
@@ -166,12 +213,7 @@ function reject() {
                     :error="form.errors.item_id"
                 />
 
-                <TextField
-                    v-model="form.qty"
-                    label="How much"
-                    inputmode="decimal"
-                    :error="form.errors.qty"
-                />
+                <TextField v-model="form.qty" label="How much" inputmode="decimal" :error="form.errors.qty" />
 
                 <TextField
                     v-model="form.amount"
@@ -187,7 +229,7 @@ function reject() {
                 />
 
                 <label class="inline-flex min-h-touch cursor-pointer items-center gap-2 rounded-control border border-line px-4 text-body text-ink">
-                    <Camera :size="20" />
+                    <Camera :size="18" />
                     {{ form.bill ? 'Bill photo added' : 'Photo of the bill' }}
                     <input type="file" accept="image/*" capture="environment" class="sr-only" @change="pickBill" />
                 </label>

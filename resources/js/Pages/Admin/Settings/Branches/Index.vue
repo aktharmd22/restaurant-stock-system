@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeft, Clock, Phone, Plus, Users } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 
 defineProps({
     branches: { type: Array, required: true },
@@ -33,36 +33,35 @@ function toggle(branch) {
             Settings
         </Link>
 
-        <div class="space-y-2">
-            <SpineCard
-                v-for="branch in branches"
-                :key="branch.id"
-                :status="branch.is_active ? 'approved' : 'cancelled'"
-            >
-                <div class="flex flex-wrap items-start gap-3 p-card">
+        <Card :padded="false">
+            <div class="divide-y divide-line">
+                <div
+                    v-for="branch in branches"
+                    :key="branch.id"
+                    class="flex flex-wrap items-center gap-3 px-4 py-3 sm:px-5"
+                    :class="branch.is_active ? '' : 'opacity-60'"
+                >
                     <div class="min-w-0 flex-1">
-                        <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex flex-wrap items-baseline gap-x-2">
                             <p class="text-body font-medium text-ink">{{ branch.name }}</p>
-                            <span class="rounded-full bg-page px-2.5 py-1 text-helper tabular text-ink-soft">
-                                {{ branch.code }}
-                            </span>
-                            <span
-                                v-if="branch.type === 'main'"
-                                class="rounded-full bg-primary-light px-2.5 py-1 text-helper text-primary"
-                            >
+                            <span class="text-helper tabular text-ink-muted">{{ branch.code }}</span>
+                            <span v-if="branch.type === 'main'" class="text-helper text-primary">
                                 Main store
+                            </span>
+                            <span v-if="!branch.is_active" class="text-helper text-ink-muted">
+                                Switched off
                             </span>
                         </div>
 
-                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-helper text-ink-soft">
+                        <div class="mt-0.5 flex flex-wrap gap-x-4 gap-y-1 text-helper text-ink-soft">
                             <span class="inline-flex items-center gap-1.5">
-                                <Clock :size="16" /> Cut-off {{ branch.cutoff_time }}
+                                <Clock :size="14" /> Cut-off {{ branch.cutoff_time }}
                             </span>
                             <span v-if="branch.phone" class="inline-flex items-center gap-1.5">
-                                <Phone :size="16" /> {{ branch.phone }}
+                                <Phone :size="14" /> {{ branch.phone }}
                             </span>
                             <span class="inline-flex items-center gap-1.5">
-                                <Users :size="16" /> {{ branch.people }} people
+                                <Users :size="14" /> {{ branch.people }} people
                             </span>
                         </div>
                     </div>
@@ -71,17 +70,13 @@ function toggle(branch) {
                         <AppButton variant="secondary" :href="`/admin/settings/branches/${branch.id}/edit`">
                             Edit
                         </AppButton>
-                        <AppButton
-                            v-if="branch.type !== 'main'"
-                            variant="ghost"
-                            @click="toggle(branch)"
-                        >
+                        <AppButton v-if="branch.type !== 'main'" variant="ghost" @click="toggle(branch)">
                             {{ branch.is_active ? 'Switch off' : 'Switch on' }}
                         </AppButton>
                     </div>
                 </div>
-            </SpineCard>
-        </div>
+            </div>
+        </Card>
 
         <p class="mt-4 max-w-3xl text-helper text-ink-soft">
             Branches are switched off, never deleted, so their stock history stays readable.

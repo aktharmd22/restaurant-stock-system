@@ -97,6 +97,16 @@ class ItemSeeder extends Seeder
         ],
     ];
 
+    /** Vegetables green, meat red, and so on - colour people already expect. */
+    private const COLOURS = [
+        'Vegetables' => 'green',
+        'Meat and fish' => 'rose',
+        'Grains and staples' => 'amber',
+        'Spices' => 'orange',
+        'Dairy and oils' => 'blue',
+        'Packaging and supplies' => 'violet',
+    ];
+
     public function run(): void
     {
         $categorySort = 0;
@@ -104,7 +114,11 @@ class ItemSeeder extends Seeder
         foreach (self::CATALOGUE as $categoryName => $items) {
             $category = Category::updateOrCreate(
                 ['name' => $categoryName],
-                ['sort_order' => $categorySort += 10, 'is_active' => true],
+                [
+                    'colour' => self::COLOURS[$categoryName] ?? 'slate',
+                    'sort_order' => $categorySort += 10,
+                    'is_active' => true,
+                ],
             );
 
             $itemSort = 0;

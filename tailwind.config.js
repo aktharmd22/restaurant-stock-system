@@ -71,6 +71,21 @@ export default {
                 partial: { DEFAULT: '#C2410C', bg: '#FFF1E7' },
                 rejected: { DEFAULT: '#B91C1C', bg: '#FDECEC' },
 
+                /*
+                 * Item groups. Mild backgrounds a branch can scan by colour,
+                 * each paired with an ink that stays readable on it.
+                 */
+                cat: {
+                    green: '#E8F5EC', 'green-ink': '#15803D',
+                    rose: '#FDECEC', 'rose-ink': '#B91C1C',
+                    amber: '#FEF3E2', 'amber-ink': '#B45309',
+                    orange: '#FFF1E7', 'orange-ink': '#C2410C',
+                    blue: '#E9EDF9', 'blue-ink': '#1E3A8A',
+                    violet: '#EFE9FE', 'violet-ink': '#6D3BEB',
+                    cyan: '#E1F4FB', 'cyan-ink': '#0E7C9B',
+                    slate: '#F1F3F6', 'slate-ink': '#6B7280',
+                },
+
                 // Soft tiles behind stat-card icons.
                 tile: {
                     violet: '#EFE9FE',

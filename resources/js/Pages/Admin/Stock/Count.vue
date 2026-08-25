@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ChevronLeft, Warehouse } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';

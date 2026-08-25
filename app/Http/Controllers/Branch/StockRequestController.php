@@ -68,7 +68,7 @@ class StockRequestController extends Controller
 
         return Inertia::render('Branch/AskForStock', [
             'items' => $lowStock->itemsForBranch($branch->id),
-            'categories' => Category::active()->ordered()->get(['id', 'name']),
+            'categories' => Category::active()->ordered()->get(['id', 'name', 'colour']),
             'cutoff' => $cutoff->countdown($branch),
 
             // "Same as last time" fills the whole form in one tap - most days a

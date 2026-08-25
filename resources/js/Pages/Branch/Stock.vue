@@ -5,7 +5,7 @@ import { Search } from 'lucide-vue-next';
 import BranchLayout from '@/Layouts/BranchLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 
 const props = defineProps({
     rows: { type: Array, required: true },
@@ -63,21 +63,34 @@ function reload(changes = {}) {
             {{ lowCount }} item<span v-if="lowCount !== 1">s</span> running low.
         </p>
 
-        <div v-if="rows.length" class="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            <SpineCard v-for="row in rows" :key="row.id" :status="row.is_low ? 'low' : 'approved'">
-                <div class="flex items-center justify-between gap-3 p-card">
-                    <div class="min-w-0">
-                        <p class="text-body font-medium text-ink">{{ row.name }}</p>
-                        <p class="text-helper text-ink-soft">
-                            {{ row.category }}
-                            <span v-if="row.use_by"> · use by {{ row.use_by }}</span>
-                        </p>
+        <!-- One list, laid out in columns on a wider screen. Hairlines carry
+             the rhythm; nothing floats. -->
+        <div v-if="rows.length" class="mt-4">
+            <Card :padded="false">
+                <!-- The right-hand rule on the last column is pushed under the
+                     card's own border, so every column reads the same. -->
+                <div class="-mr-px grid sm:grid-cols-2 xl:grid-cols-3">
+                    <div
+                        v-for="row in rows"
+                        :key="row.id"
+                        class="flex items-center justify-between gap-3 border-b border-r border-line px-4 py-3"
+                    >
+                        <div class="min-w-0">
+                            <p class="truncate text-body font-medium text-ink">{{ row.name }}</p>
+                            <p class="truncate text-helper text-ink-soft">
+                                {{ row.category }}
+                                <span v-if="row.use_by"> · use by {{ row.use_by }}</span>
+                            </p>
+                        </div>
+                        <div class="shrink-0 text-right">
+                            <p class="text-qty tabular" :class="row.is_low ? 'text-partial' : 'text-ink'">
+                                {{ row.on_hand_text }}
+                            </p>
+                            <p v-if="row.is_low" class="text-micro font-medium text-partial">low</p>
+                        </div>
                     </div>
-                    <p class="shrink-0 text-qty tabular" :class="row.is_low ? 'text-partial' : 'text-ink'">
-                        {{ row.on_hand_text }}
-                    </p>
                 </div>
-            </SpineCard>
+            </Card>
         </div>
 
         <EmptyState

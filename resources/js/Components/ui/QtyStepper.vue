@@ -116,27 +116,36 @@ onBeforeUnmount(stopHold);
             <Minus :size="24" />
         </button>
 
-        <div class="min-w-[84px] border-x border-line px-2 text-center">
-            <input
-                v-if="editing"
-                ref="numberInput"
-                v-model="draft"
-                type="text"
-                inputmode="decimal"
-                class="h-touch w-full border-0 bg-transparent p-0 text-center text-qty text-ink focus:ring-0"
-                :aria-label="label"
-                @blur="commitEditing"
-                @keydown.enter.prevent="commitEditing"
-            />
+        <!--
+            The wrapper is a fixed width, and the input is told size="1". Left at
+            its default an input asks for twenty characters of room, and because
+            nothing here shrinks, that pushed the whole control wider the moment
+            anyone tapped the number.
+        -->
+        <div class="flex h-touch w-[84px] shrink-0 items-center justify-center gap-1 border-x border-line px-2">
+            <template v-if="editing">
+                <input
+                    ref="numberInput"
+                    v-model="draft"
+                    type="text"
+                    size="1"
+                    inputmode="decimal"
+                    class="h-touch w-full min-w-0 border-0 bg-transparent p-0 text-center text-qty text-ink focus:ring-0"
+                    :aria-label="label"
+                    @blur="commitEditing"
+                    @keydown.enter.prevent="commitEditing"
+                />
+                <span v-if="unit" class="shrink-0 text-helper text-ink-soft">{{ unit }}</span>
+            </template>
             <button
                 v-else
                 type="button"
-                class="flex h-touch w-full items-center justify-center gap-1 text-qty tabular text-ink"
+                class="flex h-touch w-full min-w-0 items-center justify-center gap-1 text-qty tabular text-ink"
                 :aria-label="`${label}: ${display} ${unit}. Tap to type a number.`"
                 @click="startEditing"
             >
-                {{ display }}
-                <span v-if="unit" class="text-helper font-normal text-ink-soft">{{ unit }}</span>
+                <span class="truncate">{{ display }}</span>
+                <span v-if="unit" class="shrink-0 text-helper font-normal text-ink-soft">{{ unit }}</span>
             </button>
         </div>
 

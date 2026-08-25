@@ -5,7 +5,7 @@ import { Camera, CheckCircle2 } from 'lucide-vue-next';
 import BranchLayout from '@/Layouts/BranchLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
+import Card from '@/Components/ui/Card.vue';
 
 const props = defineProps({
     request: { type: Object, required: true },
@@ -74,13 +74,14 @@ function confirm() {
             </p>
         </div>
 
-        <div class="space-y-2">
-            <SpineCard
-                v-for="line in sentLines"
-                :key="line.id"
-                :status="lines[line.id].qty < line.sent ? 'partial' : 'approved'"
-            >
-                <div class="p-card">
+        <Card :padded="false">
+            <div class="divide-y divide-line">
+                <div
+                    v-for="line in sentLines"
+                    :key="line.id"
+                    class="px-4 py-3.5 sm:px-5"
+                    :class="lines[line.id].qty < line.sent ? 'bg-partial-bg/40' : ''"
+                >
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <p class="text-body font-medium text-ink">{{ line.item }}</p>
@@ -136,8 +137,8 @@ function confirm() {
                         </label>
                     </div>
                 </div>
-            </SpineCard>
-        </div>
+            </div>
+        </Card>
 
         <p v-if="missingReason" class="mt-4 rounded-control bg-partial-bg p-3 text-body text-partial">
             Pick what happened to the missing items before you confirm.

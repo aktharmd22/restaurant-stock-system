@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { Volume2 } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';

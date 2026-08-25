@@ -8,9 +8,8 @@ import Card from '@/Components/ui/Card.vue';
 import CountdownTimer from '@/Components/ui/CountdownTimer.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import InstallPrompt from '@/Components/ui/InstallPrompt.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 
 const props = defineProps({
     greeting: { type: String, required: true },
@@ -93,24 +92,24 @@ const quickLinks = [
                 <section>
                     <h2 class="mb-2 text-heading text-ink">Your last request</h2>
 
-                    <SpineCard v-if="latest" :status="latest.status">
-                        <Link :href="`/b/requests/${latest.id}`" class="block p-card">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <p class="text-body font-medium text-ink">
-                                        {{ latest.item_count }} items
-                                    </p>
-                                    <p class="mt-0.5 text-helper text-ink-soft">{{ latest.sent_at_text }}</p>
-                                </div>
-                                <StatusPill :status="latest.status" size="lg" />
+                    <Link
+                        v-if="latest"
+                        :href="`/b/requests/${latest.id}`"
+                        class="block rounded-card border border-line bg-surface p-card shadow-card transition hover:border-ink-muted"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="text-title text-ink">{{ latest.item_count }} items</p>
+                                <p class="mt-0.5 text-helper text-ink-soft">{{ latest.sent_at_text }}</p>
                             </div>
+                            <StatusText :status="latest.status" />
+                        </div>
 
-                            <p class="mt-3 inline-flex items-center gap-1 text-body font-medium text-primary">
-                                See what was approved
-                                <ChevronRight :size="16" />
-                            </p>
-                        </Link>
-                    </SpineCard>
+                        <p class="mt-3 inline-flex items-center gap-1 text-body font-medium text-primary">
+                            See what was approved
+                            <ChevronRight :size="16" />
+                        </p>
+                    </Link>
 
                     <EmptyState
                         v-else
@@ -124,7 +123,7 @@ const quickLinks = [
                     </EmptyState>
                 </section>
 
-                <SpineCard v-if="toReceive > 0" status="sent">
+                <div v-if="toReceive > 0" class="rounded-card border border-line bg-surface shadow-card">
                     <Link href="/b/receive" class="flex items-center gap-3 p-card">
                         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-light text-primary">
                             <PackageCheck :size="20" />
@@ -137,7 +136,7 @@ const quickLinks = [
                         </span>
                         <ChevronRight :size="20" class="shrink-0 text-ink-muted" />
                     </Link>
-                </SpineCard>
+                </div>
 
                 <Card
                     v-if="runningLow.length"
@@ -161,7 +160,7 @@ const quickLinks = [
                             :key="item.id"
                             class="flex items-center gap-3 px-card py-2.5"
                         >
-                            <span class="h-8 w-1 shrink-0 rounded-full bg-partial" aria-hidden="true" />
+                            <span class="h-2 w-2 shrink-0 rounded-full bg-partial" aria-hidden="true" />
 
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate text-body font-medium text-ink">{{ item.name }}</span>

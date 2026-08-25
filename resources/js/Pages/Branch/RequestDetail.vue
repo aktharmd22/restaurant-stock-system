@@ -5,8 +5,8 @@ import { CheckCircle2, Truck, Undo2 } from 'lucide-vue-next';
 import BranchLayout from '@/Layouts/BranchLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import Card from '@/Components/ui/Card.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 
 const props = defineProps({
     request: { type: Object, required: true },
@@ -66,69 +66,61 @@ function cancel(reason = null) {
             </div>
         </div>
 
-        <SpineCard :status="request.status">
-            <div class="p-card">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <p class="text-body font-medium text-ink">{{ request.number }}</p>
-                        <p class="text-helper text-ink-soft">Sent {{ request.sent_at_text }}</p>
-                    </div>
-                    <StatusPill :status="request.status" size="lg" />
+        <Card>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-title text-ink">{{ request.number }}</p>
+                    <p class="text-helper text-ink-soft">Sent {{ request.sent_at_text }}</p>
                 </div>
-
-                <p v-if="request.note" class="mt-3 text-body text-ink-soft">"{{ request.note }}"</p>
-
-                <div
-                    v-if="request.status === 'sent'"
-                    class="mt-3 flex items-center gap-2 rounded-control bg-primary-light p-3 text-body text-primary"
-                >
-                    <Truck :size="20" />
-                    <span>
-                        On the way<span v-if="request.carrier"> with {{ request.carrier }}</span>
-                        <span v-if="request.vehicle"> ({{ request.vehicle }})</span>
-                    </span>
-                </div>
-
-                <p v-if="request.cancel_reason" class="mt-3 text-body text-ink-soft">
-                    Cancelled: {{ request.cancel_reason }}
-                </p>
+                <StatusText :status="request.status" />
             </div>
-        </SpineCard>
 
-        <!-- Three plain columns: what you asked, what was approved, what turned up -->
-        <div class="mt-4 space-y-2">
-            <SpineCard v-for="line in request.lines" :key="line.id" :status="line.tone">
-                <div class="p-card">
-                    <div class="flex items-start justify-between gap-3">
+            <p v-if="request.note" class="mt-3 text-body text-ink-soft">"{{ request.note }}"</p>
+
+            <div
+                v-if="request.status === 'sent'"
+                class="mt-3 flex items-center gap-2 rounded-control bg-primary-light p-3 text-body text-primary"
+            >
+                <Truck :size="18" />
+                <span>
+                    On the way<span v-if="request.carrier"> with {{ request.carrier }}</span>
+                    <span v-if="request.vehicle"> ({{ request.vehicle }})</span>
+                </span>
+            </div>
+
+            <p v-if="request.cancel_reason" class="mt-3 text-body text-ink-soft">
+                Cancelled: {{ request.cancel_reason }}
+            </p>
+        </Card>
+
+        <!-- What you asked, what was approved, what turned up - one line each. -->
+        <Card class="mt-4" :padded="false" title="What you asked for">
+            <div class="divide-y divide-line">
+                <div v-for="line in request.lines" :key="line.id" class="px-4 py-3 sm:px-5">
+                    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                         <p class="min-w-0 text-body font-medium text-ink">{{ line.item }}</p>
-                        <StatusPill :status="line.tone" :label="line.status_label" />
+                        <StatusText :status="line.tone" :label="line.status_label" size="sm" />
                     </div>
 
-                    <dl class="mt-3 grid grid-cols-3 gap-2 text-center">
-                        <div class="rounded-control bg-page py-2">
-                            <dt class="text-helper text-ink-soft">You asked</dt>
-                            <dd class="text-qty tabular text-ink">{{ line.requested_text }}</dd>
+                    <dl class="mt-1.5 flex flex-wrap gap-x-6 gap-y-1">
+                        <div class="flex items-baseline gap-1.5">
+                            <dt class="text-helper text-ink-soft">Asked</dt>
+                            <dd class="text-body tabular text-ink">{{ line.requested_text }}</dd>
                         </div>
-                        <div class="rounded-control bg-page py-2">
+                        <div class="flex items-baseline gap-1.5">
                             <dt class="text-helper text-ink-soft">Approved</dt>
-                            <dd class="text-qty tabular text-ink">
-                                {{ line.approved_text ?? '—' }}
-                            </dd>
+                            <dd class="text-body tabular text-ink">{{ line.approved_text ?? '—' }}</dd>
                         </div>
-                        <div class="rounded-control bg-page py-2">
+                        <div class="flex items-baseline gap-1.5">
                             <dt class="text-helper text-ink-soft">Arrived</dt>
-                            <dd class="text-qty tabular text-ink">
-                                {{ line.received_text ?? '—' }}
-                            </dd>
+                            <dd class="text-body tabular text-ink">{{ line.received_text ?? '—' }}</dd>
                         </div>
                     </dl>
 
-                    <p v-if="line.reason" class="mt-3 rounded-control bg-partial-bg p-3 text-body text-partial">
-                        {{ line.reason }}
-                    </p>
+                    <p v-if="line.reason" class="mt-1.5 text-helper text-partial">{{ line.reason }}</p>
                 </div>
-            </SpineCard>
-        </div>
+            </div>
+        </Card>
 
         <template v-if="canCancel && !justSent" #action>
             <AppButton variant="danger" size="lg" block @click="cancelOpen = true">

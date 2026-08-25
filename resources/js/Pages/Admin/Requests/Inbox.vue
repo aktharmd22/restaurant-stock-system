@@ -8,8 +8,9 @@ import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
-import StatusPill from '@/Components/ui/StatusPill.vue';
+import Card from '@/Components/ui/Card.vue';
+import ListRow from '@/Components/ui/ListRow.vue';
+import StatusText from '@/Components/ui/StatusText.vue';
 
 const props = defineProps({
     requests: { type: Object, required: true },
@@ -129,31 +130,33 @@ function approveAll() {
                     />
                 </div>
 
-                <div v-if="requests.data.length" class="mt-3 space-y-2">
-                    <SpineCard
-                        v-for="request in requests.data"
-                        :key="request.id"
-                        :status="request.is_late ? 'late' : request.status"
-                    >
-                        <Link
-                            :href="`/admin/requests?status=${filters.status}&selected=${request.id}`"
-                            class="block p-card"
-                            :class="selected?.id === request.id ? 'bg-primary-light/40' : ''"
-                            preserve-scroll
-                        >
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="min-w-0">
-                                    <p class="truncate text-body font-medium text-ink">
-                                        {{ request.branch }}
-                                    </p>
-                                    <p class="mt-0.5 text-helper text-ink-soft">
-                                        {{ request.item_count }} items · {{ request.sent_at_text }}
-                                    </p>
-                                </div>
-                                <StatusPill :status="request.is_late ? 'late' : request.status" />
-                            </div>
-                        </Link>
-                    </SpineCard>
+                <div v-if="requests.data.length" class="mt-3">
+                    <Card :padded="false">
+                        <div class="divide-y divide-line">
+                            <ListRow
+                                v-for="request in requests.data"
+                                :key="request.id"
+                                :href="`/admin/requests?status=${filters.status}&selected=${request.id}`"
+                                :status="request.is_late ? 'late' : request.status"
+                                :chevron="false"
+                                :class="selected?.id === request.id ? 'bg-primary-light/50' : ''"
+                            >
+                                <span class="block truncate text-body font-medium text-ink">
+                                    {{ request.branch }}
+                                </span>
+                                <span class="mt-0.5 block truncate text-helper text-ink-soft">
+                                    {{ request.item_count }} items · {{ request.sent_at_text }}
+                                </span>
+
+                                <template #end>
+                                    <StatusText
+                                        :status="request.is_late ? 'late' : request.status"
+                                        size="sm"
+                                    />
+                                </template>
+                            </ListRow>
+                        </div>
+                    </Card>
 
                     <Pagination :links="requests.links" :meta="requests" />
                 </div>
@@ -190,9 +193,9 @@ function approveAll() {
                             </p>
                         </div>
 
-                        <div class="flex shrink-0 flex-wrap items-center gap-2">
-                            <StatusPill v-if="selected.is_late" status="late" />
-                            <StatusPill :status="selected.status" size="lg" />
+                        <div class="flex shrink-0 flex-wrap items-center gap-4">
+                            <StatusText v-if="selected.is_late" status="late" />
+                            <StatusText :status="selected.status" />
                         </div>
                     </div>
 
@@ -257,7 +260,7 @@ function approveAll() {
 
                                 <!-- Already decided -->
                                 <div v-else class="shrink-0 text-right">
-                                    <StatusPill :status="line.tone" :label="line.status_label" />
+                                    <StatusText :status="line.tone" :label="line.status_label" size="sm" />
                                     <p class="mt-1 text-helper text-ink-soft">
                                         Approved <span class="tabular">{{ line.approved_text ?? '—' }}</span>
                                     </p>

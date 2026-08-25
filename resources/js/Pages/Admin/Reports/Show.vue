@@ -4,8 +4,8 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ChevronLeft, Download, FileText } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import Card from '@/Components/ui/Card.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
-import SpineCard from '@/Components/ui/SpineCard.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
 const props = defineProps({
@@ -149,23 +149,30 @@ function cell(row, column) {
             </table>
         </div>
 
-        <!-- Phone: the same rows as cards -->
-        <div v-if="report.rows.length" class="mt-2 space-y-2 lg:hidden">
-            <SpineCard v-for="(row, index) in report.rows" :key="index" :status="row.is_low ? 'low' : null">
-                <div class="p-card">
-                    <p class="text-body font-medium text-ink">{{ cell(row, report.columns[0]) }}</p>
-                    <dl class="mt-2 space-y-1">
-                        <div
-                            v-for="column in report.columns.slice(1)"
-                            :key="column.key"
-                            class="flex justify-between gap-3"
-                        >
-                            <dt class="text-helper text-ink-soft">{{ column.label }}</dt>
-                            <dd class="text-body tabular text-ink">{{ cell(row, column) }}</dd>
-                        </div>
-                    </dl>
+        <!-- Phone: the same rows, one list -->
+        <div v-if="report.rows.length" class="mt-2 lg:hidden">
+            <Card :padded="false">
+                <div class="divide-y divide-line">
+                    <div
+                        v-for="(row, index) in report.rows"
+                        :key="index"
+                        class="px-4 py-3"
+                        :class="row.is_low ? 'bg-partial-bg/40' : ''"
+                    >
+                        <p class="text-body font-medium text-ink">{{ cell(row, report.columns[0]) }}</p>
+                        <dl class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
+                            <div
+                                v-for="column in report.columns.slice(1)"
+                                :key="column.key"
+                                class="flex items-baseline gap-1.5"
+                            >
+                                <dt class="text-helper text-ink-soft">{{ column.label }}</dt>
+                                <dd class="text-body tabular text-ink">{{ cell(row, column) }}</dd>
+                            </div>
+                        </dl>
+                    </div>
                 </div>
-            </SpineCard>
+            </Card>
         </div>
 
         <EmptyState
