@@ -67,7 +67,7 @@ function submit() {
             Items
         </Link>
 
-        <form class="max-w-3xl space-y-4" @submit.prevent="submit">
+        <form class="max-w-5xl space-y-4" @submit.prevent="submit">
             <section class="space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg">
                 <h2 class="text-heading text-ink">What it is</h2>
 

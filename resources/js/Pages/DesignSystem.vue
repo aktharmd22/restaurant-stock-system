@@ -27,18 +27,19 @@ const sample = ref('');
 const statuses = Object.keys(STATUS);
 
 const swatches = [
-    { name: 'Page', className: 'bg-page', hex: '#F6F7F9' },
+    { name: 'Page', className: 'bg-page', hex: '#F5F6F8' },
     { name: 'Surface', className: 'bg-surface border border-line', hex: '#FFFFFF' },
-    { name: 'Border', className: 'bg-line', hex: '#E8EAED' },
+    { name: 'Border', className: 'bg-line', hex: '#ECEEF2' },
     { name: 'Text', className: 'bg-ink', hex: '#16181D' },
     { name: 'Text soft', className: 'bg-ink-soft', hex: '#6B7280' },
     { name: 'Text muted', className: 'bg-ink-muted', hex: '#9CA3AF' },
-    { name: 'Primary', className: 'bg-primary', hex: '#1F5EFF' },
-    { name: 'Primary light', className: 'bg-primary-light', hex: '#EBF1FF' },
+    { name: 'Primary', className: 'bg-primary', hex: '#1E3A8A' },
+    { name: 'Primary light', className: 'bg-primary-light', hex: '#E9EDF9' },
     { name: 'Waiting', className: 'bg-waiting', hex: '#B45309' },
     { name: 'Approved', className: 'bg-approved', hex: '#15803D' },
     { name: 'Partial', className: 'bg-partial', hex: '#C2410C' },
     { name: 'Rejected', className: 'bg-rejected', hex: '#B91C1C' },
+    { name: 'Sidebar', className: 'bg-shell', hex: '#0F1D40' },
 ];
 </script>
 
@@ -51,12 +52,12 @@ const swatches = [
             <section class="rounded-card border border-line bg-surface p-card lg:p-card-lg">
                 <h2 class="text-heading text-ink">Type</h2>
                 <div class="mt-4 space-y-3">
-                    <p class="text-title text-ink">Page title · 24px bold</p>
-                    <p class="text-heading text-ink">Section heading · 18px medium</p>
-                    <p class="text-body text-ink">Body and labels · 16px regular</p>
-                    <p class="text-qty tabular text-ink">12.5 kg · quantity · 22px medium</p>
-                    <p class="text-stat tabular text-ink">248 · big number · 32px bold</p>
-                    <p class="text-helper text-ink-soft">Helper text · 14px · nothing is ever smaller</p>
+                    <p class="text-title text-ink">Page title · 20px bold</p>
+                    <p class="text-heading text-ink">Section heading · 16px semibold</p>
+                    <p class="text-body text-ink">Body and labels · 14px regular</p>
+                    <p class="text-qty tabular text-ink">12.5 kg · quantity · 18px semibold</p>
+                    <p class="text-stat tabular text-ink">248 · big number · 28px bold</p>
+                    <p class="text-helper text-ink-soft">Helper text · 13px</p>
                 </div>
             </section>
 
@@ -107,7 +108,7 @@ const swatches = [
             <section class="rounded-card border border-line bg-surface p-card lg:p-card-lg">
                 <h2 class="text-heading text-ink">Quantity</h2>
                 <p class="mt-1 text-helper text-ink-soft">
-                    48px targets. Hold to run up fast. Tap the number to type it.
+                    44px targets. Hold to run up fast. Tap the number to type it.
                 </p>
                 <div class="mt-4">
                     <QtyStepper v-model="qty" unit="kg" :step="0.5" label="Chicken" />

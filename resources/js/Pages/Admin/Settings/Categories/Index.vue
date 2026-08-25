@@ -69,7 +69,7 @@ function toggle(category) {
             Settings
         </Link>
 
-        <div class="max-w-2xl space-y-2">
+        <div class="max-w-4xl space-y-2">
             <SpineCard
                 v-for="category in categories"
                 :key="category.id"

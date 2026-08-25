@@ -1,10 +1,10 @@
 <script setup>
 import { computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { ChevronRight } from 'lucide-vue-next';
 import { icons } from '@/Support/icons';
 
 import BottomNav from '@/Components/ui/BottomNav.vue';
-import BrandMark from '@/Components/ui/BrandMark.vue';
 import OfflineBanner from '@/Components/ui/OfflineBanner.vue';
 import SoundIndicator from '@/Components/ui/SoundIndicator.vue';
 import ToastHost from '@/Components/ui/ToastHost.vue';
@@ -12,16 +12,16 @@ import { useRealtime } from '@/Composables/useRealtime';
 
 const props = defineProps({
     title: { type: String, default: null },
+    subtitle: { type: String, default: null },
 });
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user ?? {});
+const business = computed(() => page.props.business ?? {});
 const currentPath = computed(() => page.url.split('?')[0]);
 
 useRealtime();
 
-// Desktop sidebar and mobile bar are driven by one list, so they can never
-// disagree about where things are.
 // Five is the most a phone bar can hold without the labels turning to mush.
 const navItems = [
     { label: 'Dashboard', href: '/admin', icon: 'LayoutDashboard', match: ['/admin'] },
@@ -41,51 +41,73 @@ const sidebarItems = [
     navItems[4],
 ];
 
+function matchLength(item, path) {
+    return item.match.reduce((best, prefix) => {
+        const hit = path === prefix || path.startsWith(`${prefix}/`);
+        return hit ? Math.max(best, prefix.length) : best;
+    }, 0);
+}
+
+// Every nav prefix starts with /admin, so a plain "does it match" test lights
+// up Dashboard on every admin page. The most specific match wins instead.
 function isActive(item) {
     const path = currentPath.value;
-    return item.match.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+    const mine = matchLength(item, path);
+
+    if (mine === 0) return false;
+
+    return !sidebarItems.some((other) => matchLength(other, path) > mine);
 }
 </script>
 
 <template>
     <div class="min-h-dvh bg-page">
-        <!-- Keyboard users should not have to tab through the whole nav. -->
         <a
             href="#main"
             class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-control focus:bg-primary focus:px-4 focus:py-3 focus:text-body focus:text-white"
         >
             Skip to the page
         </a>
-        <!-- Desktop sidebar -->
-        <aside
-            class="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface lg:flex"
-        >
-            <div class="border-b border-line px-5 py-4">
-                <BrandMark size="sm" />
+
+        <!-- The dark shell anchors the layout and pushes the work forward. -->
+        <aside class="fixed inset-y-0 left-0 z-30 hidden w-sidebar flex-col bg-shell lg:flex">
+            <div class="flex items-center gap-3 px-5 py-5">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-white">
+                    <component :is="icons.Boxes" :size="20" class="text-shell" aria-hidden="true" />
+                </span>
+                <span class="truncate text-heading text-white">{{ business.name }}</span>
             </div>
 
-            <nav class="flex-1 overflow-y-auto p-3" aria-label="Main">
+            <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-2" aria-label="Main">
                 <Link
                     v-for="item in sidebarItems"
                     :key="item.href"
                     :href="item.href"
-                    class="mb-1 flex min-h-touch items-center gap-3 rounded-control px-3 text-body transition"
+                    class="group flex min-h-touch items-center gap-3 rounded-control px-3 text-body transition"
                     :class="
                         isActive(item)
-                            ? 'bg-primary-light font-medium text-primary'
-                            : 'text-ink-soft hover:bg-page hover:text-ink'
+                            ? 'bg-primary font-medium text-white'
+                            : 'text-shell-text hover:bg-shell-soft hover:text-white'
                     "
                     :aria-current="isActive(item) ? 'page' : undefined"
                 >
-                    <component :is="icons[item.icon]" :size="20" aria-hidden="true" />
-                    {{ item.label }}
+                    <component :is="icons[item.icon]" :size="18" aria-hidden="true" />
+                    <span class="flex-1 truncate">{{ item.label }}</span>
+                    <ChevronRight
+                        :size="16"
+                        class="shrink-0 transition"
+                        :class="isActive(item) ? 'opacity-70' : 'opacity-0 group-hover:opacity-50'"
+                        aria-hidden="true"
+                    />
                 </Link>
             </nav>
 
-            <div class="border-t border-line p-3">
-                <div class="px-3 py-2">
-                    <p class="truncate text-body font-medium text-ink">{{ user.name }}</p>
-                    <p class="truncate text-helper text-ink-soft">Main store</p>
+            <div class="border-t border-shell-line px-3 py-3">
+                <div class="px-2 pb-2">
+                    <p class="truncate text-body font-medium text-white">{{ user.name }}</p>
+                    <p class="truncate text-helper text-shell-text">
+                        {{ user.branch?.name ?? 'Main store' }}
+                    </p>
                 </div>
 
                 <Link
@@ -93,24 +115,29 @@ function isActive(item) {
                     method="post"
                     as="button"
                     type="button"
-                    class="flex min-h-touch w-full items-center gap-3 rounded-control px-3 text-body text-ink-soft transition hover:bg-page hover:text-ink"
+                    class="flex min-h-touch w-full items-center gap-3 rounded-control px-3 text-body text-shell-text transition hover:bg-shell-soft hover:text-white"
                 >
-                    <component :is="icons.LogOut" :size="20" aria-hidden="true" />
+                    <component :is="icons.LogOut" :size="18" aria-hidden="true" />
                     Sign out
                 </Link>
             </div>
         </aside>
 
-        <div class="lg:pl-64">
-            <header class="sticky top-0 z-20 border-b border-line bg-surface pt-safe">
-                <div class="flex min-h-[60px] items-center gap-3 px-4 lg:px-6">
-                    <div class="lg:hidden">
-                        <BrandMark size="sm" :show-name="false" />
-                    </div>
+        <div class="lg:pl-sidebar">
+            <header class="sticky top-0 z-20 border-b border-line bg-page/90 pt-safe backdrop-blur">
+                <div class="flex min-h-[64px] items-center gap-3 px-4 lg:px-6">
+                    <span
+                        class="flex h-9 w-9 items-center justify-center rounded-control bg-shell lg:hidden"
+                    >
+                        <component :is="icons.Boxes" :size="18" class="text-white" aria-hidden="true" />
+                    </span>
 
-                    <h1 class="min-w-0 flex-1 truncate text-heading text-ink lg:text-title">
-                        {{ props.title }}
-                    </h1>
+                    <div class="min-w-0 flex-1">
+                        <h1 class="truncate text-title text-ink">{{ props.title }}</h1>
+                        <p v-if="props.subtitle" class="truncate text-helper text-ink-soft">
+                            {{ props.subtitle }}
+                        </p>
+                    </div>
 
                     <SoundIndicator />
                     <slot name="header-action" />
@@ -119,7 +146,7 @@ function isActive(item) {
                 <OfflineBanner />
             </header>
 
-            <main id="main" tabindex="-1" class="px-4 py-4 pb-28 lg:px-6 lg:py-6 lg:pb-6">
+            <main id="main" tabindex="-1" class="px-4 py-4 pb-28 lg:px-6 lg:py-6 lg:pb-8">
                 <slot />
             </main>
         </div>

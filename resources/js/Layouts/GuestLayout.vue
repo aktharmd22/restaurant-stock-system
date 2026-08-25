@@ -40,10 +40,10 @@ const business = computed(() => page.props.business ?? {});
                 style="
                     background-image: linear-gradient(
                         to top,
-                        rgba(14, 53, 150, 0.97) 0%,
-                        rgba(14, 53, 150, 0.9) 34%,
-                        rgba(14, 53, 150, 0.25) 72%,
-                        rgba(14, 53, 150, 0) 100%
+                        rgba(16, 30, 74, 0.97) 0%,
+                        rgba(16, 30, 74, 0.9) 34%,
+                        rgba(16, 30, 74, 0.25) 72%,
+                        rgba(16, 30, 74, 0) 100%
                     );
                 "
             ></div>

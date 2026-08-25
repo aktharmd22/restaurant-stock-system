@@ -37,7 +37,7 @@ function newPassword(person) {
             Settings
         </Link>
 
-        <div class="max-w-3xl space-y-2">
+        <div class="space-y-2">
             <SpineCard
                 v-for="person in people"
                 :key="person.id"

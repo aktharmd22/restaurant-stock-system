@@ -15,7 +15,7 @@ defineProps({
     <AdminLayout title="Dispatch">
         <Head title="Dispatch" />
 
-        <div v-if="requests.length" class="max-w-3xl space-y-2">
+        <div v-if="requests.length" class="space-y-2">
             <SpineCard
                 v-for="request in requests"
                 :key="request.id"

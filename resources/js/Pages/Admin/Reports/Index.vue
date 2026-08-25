@@ -17,7 +17,7 @@ defineProps({
             as a spreadsheet or a PDF.
         </p>
 
-        <div class="max-w-3xl divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
+        <div class="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             <Link
                 v-for="report in reports"
                 :key="report.key"

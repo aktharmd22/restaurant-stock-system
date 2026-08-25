@@ -84,7 +84,7 @@ function reject() {
             only moves once the main store approves it.
         </p>
 
-        <div v-if="purchases.data.length" class="max-w-3xl space-y-2">
+        <div v-if="purchases.data.length" class="space-y-2">
             <SpineCard v-for="purchase in purchases.data" :key="purchase.id" :status="tone[purchase.status]">
                 <div class="p-card">
                     <div class="flex items-start gap-3">

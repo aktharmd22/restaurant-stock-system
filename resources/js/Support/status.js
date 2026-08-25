@@ -41,7 +41,7 @@ export const STATUS = {
         label: 'On the way',
         icon: 'Truck',
         pill: 'text-primary bg-primary-light border-primary/20',
-        spine: '#1F5EFF',
+        spine: '#1E3A8A',
     },
     received: {
         label: 'Arrived',

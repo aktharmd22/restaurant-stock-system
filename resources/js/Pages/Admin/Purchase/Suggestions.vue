@@ -33,7 +33,7 @@ defineProps({
             here. This is what you would need to cover everyone today.
         </p>
 
-        <div v-if="rows.length" class="max-w-3xl space-y-2">
+        <div v-if="rows.length" class="space-y-2">
             <SpineCard v-for="row in rows" :key="row.id" status="low">
                 <div class="flex flex-wrap items-center gap-3 p-card">
                     <div class="min-w-0 flex-1">

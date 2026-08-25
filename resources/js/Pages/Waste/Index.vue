@@ -65,7 +65,7 @@ function save() {
             </AppButton>
         </template>
 
-        <div v-if="entries.data.length" class="max-w-3xl space-y-2">
+        <div v-if="entries.data.length" class="space-y-2">
             <SpineCard v-for="entry in entries.data" :key="entry.id" status="rejected">
                 <div class="flex items-start gap-3 p-card">
                     <img

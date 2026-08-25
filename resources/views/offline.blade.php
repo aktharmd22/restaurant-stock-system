@@ -17,14 +17,14 @@
             padding: 24px; max-width: 400px; width: 100%; text-align: center;
         }
         .mark {
-            width: 56px; height: 56px; border-radius: 10px; background: #EBF1FF;
+            width: 56px; height: 56px; border-radius: 10px; background: #E9EDF9;
             display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;
         }
         h1 { font-size: 24px; font-weight: 700; margin: 0 0 8px; }
         p { font-size: 16px; line-height: 24px; color: #6B7280; margin: 0 0 20px; }
         button {
             min-height: 52px; width: 100%; border: 0; border-radius: 10px;
-            background: #1F5EFF; color: #FFFFFF; font-size: 16px; font-weight: 500;
+            background: #1E3A8A; color: #FFFFFF; font-size: 16px; font-weight: 500;
             font-family: inherit; cursor: pointer;
         }
     </style>
@@ -32,7 +32,7 @@
 <body>
     <div class="card">
         <span class="mark">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1F5EFF"
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A"
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 2l20 20"/>
                 <path d="M8.5 16.4a5 5 0 0 1 7 0"/>

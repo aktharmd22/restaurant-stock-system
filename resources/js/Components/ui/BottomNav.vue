@@ -15,10 +15,24 @@ const page = usePage();
 
 const currentPath = computed(() => page.url.split('?')[0]);
 
+function matchLength(item, path) {
+    const prefixes = item.match ?? [item.href];
+
+    return prefixes.reduce((best, prefix) => {
+        const hit = path === prefix || path.startsWith(`${prefix}/`);
+        return hit ? Math.max(best, prefix.length) : best;
+    }, 0);
+}
+
+// The most specific match wins, so a nested page does not also light up its
+// parent section.
 function isActive(item) {
     const path = currentPath.value;
-    if (item.match) return item.match.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
-    return path === item.href;
+    const mine = matchLength(item, path);
+
+    if (mine === 0) return false;
+
+    return !props.items.some((other) => matchLength(other, path) > mine);
 }
 </script>
 

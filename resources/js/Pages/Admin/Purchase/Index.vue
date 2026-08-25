@@ -70,7 +70,7 @@ function pick(status) {
             </button>
         </div>
 
-        <div v-if="orders.data.length" class="max-w-3xl space-y-2">
+        <div v-if="orders.data.length" class="space-y-2">
             <SpineCard v-for="order in orders.data" :key="order.id" :status="order.tone">
                 <Link :href="`/admin/purchase/${order.id}`" class="block p-card">
                     <div class="flex flex-wrap items-start justify-between gap-3">

@@ -75,7 +75,7 @@ const links = computed(() =>
     <AdminLayout title="Settings">
         <Head title="Settings" />
 
-        <div class="max-w-3xl divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
+        <div class="max-w-4xl divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
             <Link
                 v-for="link in links"
                 :key="link.href"
