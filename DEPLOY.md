@@ -12,21 +12,37 @@ You need:
 - A Hostinger plan with **SSH access** (hPanel → Advanced → SSH Access)
 - **PHP 8.2 or newer** (hPanel → Advanced → PHP Configuration)
 - A **MySQL database**, user and password (hPanel → Databases → Management)
-- Node and npm **on your own computer** — not on the server
+- Node and npm **on your own computer** — only if you intend to change the
+  screens. You do not need them just to deploy.
 
-Shared hosting has no Node, so assets are built locally and uploaded. That is
-normal and nothing is lost by it.
+Shared hosting has no Node, so the compiled CSS and JavaScript travel in the
+repository instead: `public/build/` is committed. That is why a plain
+`git pull` on the server is enough, and why you must run `npm run build` and
+commit the result whenever you change anything under `resources/js`.
 
 ---
 
-## 1. Build the assets on your computer
+## 1. Get the code
+
+The compiled assets are already in the repository, so there is nothing to build
+before you deploy.
+
+**By git (recommended)** — clone once, then updating is one command forever:
 
 ```bash
-npm install
-npm run build
+cd ~/domains/yoursite.com
+git clone https://github.com/aktharmd22/restaurant-stock-system.git app
 ```
 
-This writes `public/build/`. That folder must be uploaded with everything else.
+**By upload** — if you would rather not use git on the server, copy the whole
+project up with SFTP or the hPanel File Manager. Everything you need is in the
+repository; nothing has to be generated first.
+
+Either way you still need Composer's `vendor/` on the server, which step 3
+installs.
+
+> **If you change the screens later:** run `npm run build` on your own computer
+> and commit `public/build/` with the rest. The server never builds anything.
 
 ---
 
@@ -227,28 +243,41 @@ going live):
 | Who | Sign in with | Password |
 |---|---|---|
 | Owner | `9000000001` | `password` |
-| Main store admin | `9000000002` | `password` |
-| Branch manager | `9000000003` | `password` |
-| Branch staff | `9000000004` | `password` |
+| Admin | `9000000002` | `password` |
+| Branch manager, Park Street | `9000000003` | `password` |
+| Branch manager, Lake Road | `9000000005` | `password` |
+| Branch manager, Airport Plaza | `9000000007` | `password` |
+
+Owner and Admin can both do everything. A branch manager sees only their own
+branch.
 
 ---
 
 ## Updating later
 
-On your computer:
+If you changed anything under `resources/`, rebuild and commit on your own
+computer first:
 
 ```bash
 npm run build
+git add public/build && git commit -m "Rebuild assets" && git push
 ```
 
-Upload the changed files and `public/build/`, then over SSH:
+Then on the server:
 
 ```bash
 cd ~/domains/yoursite.com/app
+git pull
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 ```
+
+`public_html` keeps pointing at the same `build/` folder, so there is nothing
+else to copy.
+
+If you deployed by upload rather than git, send up the changed files plus
+`public/build/` and run the same four commands.
 
 ---
 

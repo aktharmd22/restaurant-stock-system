@@ -1,0 +1,1 @@
+function m(t,{symbol:n="₹",decimals:i=2}={}){const o=Number(t??0),r=o<0?"-":"",e=Math.abs(o).toLocaleString("en-IN",{minimumFractionDigits:i,maximumFractionDigits:i});return`${r}${n}${e}`}function s(t,n="₹"){return m(t,{symbol:n,decimals:0})}export{m,s as r};
