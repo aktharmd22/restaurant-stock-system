@@ -43,7 +43,6 @@ function submit() {
                 autocomplete="username"
                 inputmode="text"
                 :error="form.errors.login"
-                autofocus
             />
 
             <TextField

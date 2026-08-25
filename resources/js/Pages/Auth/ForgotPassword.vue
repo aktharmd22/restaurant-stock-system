@@ -33,7 +33,6 @@ const form = useForm({ phone: '' });
                 inputmode="tel"
                 autocomplete="tel"
                 :error="form.errors.phone"
-                autofocus
             />
 
             <AppButton

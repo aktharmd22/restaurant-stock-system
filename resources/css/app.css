@@ -31,6 +31,22 @@
     textarea {
         font-size: 16px;
     }
+
+    /*
+     * Chrome paints its own background on autofilled fields, which made every
+     * remembered login look permanently focused. There is no property to turn
+     * that off, so the accepted trick is an inset shadow the size of the field
+     * plus a transition long enough that the wash never arrives.
+     */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-text-fill-color: theme('colors.ink.DEFAULT');
+        -webkit-box-shadow: 0 0 0 1000px theme('colors.surface') inset;
+        caret-color: theme('colors.ink.DEFAULT');
+        transition: background-color 100000s ease-in-out 0s;
+    }
 }
 
 @layer components {
