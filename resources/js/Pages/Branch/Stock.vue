@@ -63,7 +63,7 @@ function reload(changes = {}) {
             {{ lowCount }} item<span v-if="lowCount !== 1">s</span> running low.
         </p>
 
-        <div v-if="rows.length" class="mt-4 space-y-2">
+        <div v-if="rows.length" class="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <SpineCard v-for="row in rows" :key="row.id" :status="row.is_low ? 'low' : 'approved'">
                 <div class="flex items-center justify-between gap-3 p-card">
                     <div class="min-w-0">

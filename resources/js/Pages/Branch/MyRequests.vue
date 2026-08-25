@@ -17,7 +17,8 @@ defineProps({
     <BranchLayout title="My requests">
         <Head title="My requests" />
 
-        <div v-if="requests.data.length" class="space-y-2">
+        <template v-if="requests.data.length">
+        <div class="grid gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
             <SpineCard v-for="item in requests.data" :key="item.id" :status="item.status">
                 <Link :href="`/b/requests/${item.id}`" class="block p-card">
                     <div class="flex items-start justify-between gap-3">
@@ -37,8 +38,10 @@ defineProps({
                 </Link>
             </SpineCard>
 
-            <Pagination :links="requests.links" :meta="requests" />
         </div>
+
+        <Pagination :links="requests.links" :meta="requests" />
+        </template>
 
         <EmptyState
             v-else

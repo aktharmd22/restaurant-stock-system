@@ -14,7 +14,7 @@ defineProps({
     <BranchLayout title="Receive delivery">
         <Head title="Receive delivery" />
 
-        <div v-if="deliveries.length" class="space-y-2">
+        <div v-if="deliveries.length" class="grid gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
             <SpineCard v-for="delivery in deliveries" :key="delivery.id" status="sent">
                 <Link :href="`/b/receive/${delivery.id}`" class="block p-card">
                     <div class="flex items-start gap-3">

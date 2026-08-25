@@ -4,6 +4,7 @@ namespace App\Services\Stock;
 
 use App\Models\Item;
 use Illuminate\Support\Collection;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -54,7 +55,16 @@ class LowStockService
             ])
             ->get();
 
-        return $rows->map(fn ($row) => $this->present($row));
+        // Photos in one query rather than one per item. A picture is the
+        // fastest way past a name someone reads slowly.
+        $photos = Media::query()
+            ->where('model_type', Item::class)
+            ->where('collection_name', 'photo')
+            ->whereIn('model_id', $rows->pluck('id'))
+            ->get()
+            ->keyBy('model_id');
+
+        return $rows->map(fn ($row) => $this->present($row, $photos));
     }
 
     /**
@@ -94,7 +104,7 @@ class LowStockService
     /**
      * @return array<string, mixed>
      */
-    private function present(object $row): array
+    private function present(object $row, ?Collection $photos = null): array
     {
         // A lightweight stand-in so Quantity can format without another query.
         $item = new Item([
@@ -125,6 +135,7 @@ class LowStockService
         return [
             'id' => (int) $row->id,
             'name' => $row->name,
+            'photo' => $photos?->get($row->id)?->getUrl('thumb'),
             'category_id' => (int) $row->category_id,
             'category' => $row->category_name,
             'unit' => $item->quantity(0)->unitLabel(),
