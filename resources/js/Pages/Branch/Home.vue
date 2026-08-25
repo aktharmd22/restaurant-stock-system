@@ -4,14 +4,17 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ChevronRight, PackageCheck, Plus } from 'lucide-vue-next';
 import BranchLayout from '@/Layouts/BranchLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import Card from '@/Components/ui/Card.vue';
 import CountdownTimer from '@/Components/ui/CountdownTimer.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import InstallPrompt from '@/Components/ui/InstallPrompt.vue';
 import SpineCard from '@/Components/ui/SpineCard.vue';
+import StatCard from '@/Components/ui/StatCard.vue';
 import StatusPill from '@/Components/ui/StatusPill.vue';
 
 const props = defineProps({
     greeting: { type: String, required: true },
+    stats: { type: Object, default: () => ({}) },
     latest: { type: Object, default: null },
     cutoff: { type: Object, required: true },
     runningLow: { type: Array, default: () => [] },
@@ -25,103 +28,183 @@ const user = computed(() => page.props.auth?.user ?? {});
 const lowPrefillUrl = computed(
     () => `/b/ask?prefill=${props.runningLow.map((item) => item.id).join(',')}`,
 );
+
+const quickLinks = [
+    { href: '/b/ask', label: 'Ask for stock' },
+    { href: '/b/receive', label: 'Receive' },
+    { href: '/b/stock', label: 'Stock left' },
+    { href: '/waste', label: 'Thrown away' },
+];
 </script>
 
 <template>
     <BranchLayout>
         <Head title="Home" />
 
-        <h1 class="text-title text-ink">{{ greeting }}, {{ user.first_name }}</h1>
+        <!-- The one primary action. On a laptop the layout puts it in the header. -->
+        <template #action>
+            <AppButton href="/b/ask" size="lg" class="w-full lg:w-auto">Ask for stock</AppButton>
+        </template>
 
-        <div class="mt-4 space-y-4">
-            <!-- Where today's request has got to -->
-            <section>
-                <h2 class="mb-2 text-heading text-ink">Your last request</h2>
+        <h1 class="text-title text-ink lg:hidden">{{ greeting }}, {{ user.first_name }}</h1>
+        <p class="hidden text-body text-ink-soft lg:block">
+            {{ greeting }}, {{ user.first_name }}. Here is where everything stands.
+        </p>
 
-                <SpineCard v-if="latest" :status="latest.status" as="a" interactive>
-                    <Link :href="`/b/requests/${latest.id}`" class="block p-card">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="text-body font-medium text-ink">
-                                    {{ latest.item_count }} items
-                                </p>
-                                <p class="mt-0.5 text-helper text-ink-soft">{{ latest.sent_at_text }}</p>
+        <!-- Laptop: the whole picture at a glance -->
+        <div class="mt-4 hidden grid-cols-2 gap-3 lg:grid xl:grid-cols-4 xl:gap-4">
+            <StatCard
+                label="Waiting for approval"
+                :value="stats.waiting ?? 0"
+                icon="Clock"
+                tone="amber"
+                href="/b/requests"
+                hint="The main store has not looked yet"
+            />
+            <StatCard
+                label="On the way"
+                :value="stats.on_the_way ?? 0"
+                icon="Truck"
+                tone="blue"
+                href="/b/receive"
+                hint="Confirm it when it arrives"
+            />
+            <StatCard
+                label="Running low"
+                :value="stats.running_low ?? 0"
+                icon="TrendingDown"
+                tone="rose"
+                :href="lowPrefillUrl"
+                hint="Below the level you set"
+            />
+            <StatCard
+                label="Items on your shelf"
+                :value="stats.on_shelf ?? 0"
+                icon="Boxes"
+                tone="green"
+                href="/b/stock"
+                hint="Anything with stock left"
+            />
+        </div>
+
+        <div class="mt-4 grid gap-4 lg:grid-cols-3">
+            <!-- Left: what is happening with your requests -->
+            <div class="space-y-4 lg:col-span-2">
+                <section>
+                    <h2 class="mb-2 text-heading text-ink">Your last request</h2>
+
+                    <SpineCard v-if="latest" :status="latest.status">
+                        <Link :href="`/b/requests/${latest.id}`" class="block p-card">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <p class="text-body font-medium text-ink">
+                                        {{ latest.item_count }} items
+                                    </p>
+                                    <p class="mt-0.5 text-helper text-ink-soft">{{ latest.sent_at_text }}</p>
+                                </div>
+                                <StatusPill :status="latest.status" size="lg" />
                             </div>
-                            <StatusPill :status="latest.status" size="lg" />
-                        </div>
 
-                        <p class="mt-3 inline-flex items-center gap-1 text-body font-medium text-primary">
-                            See what was approved
-                            <ChevronRight :size="20" />
-                        </p>
+                            <p class="mt-3 inline-flex items-center gap-1 text-body font-medium text-primary">
+                                See what was approved
+                                <ChevronRight :size="16" />
+                            </p>
+                        </Link>
+                    </SpineCard>
+
+                    <EmptyState
+                        v-else
+                        icon="ClipboardList"
+                        title="No requests yet"
+                        message="Ask the main store for stock and it will show up here."
+                    >
+                        <template #action>
+                            <AppButton href="/b/ask">Ask for stock</AppButton>
+                        </template>
+                    </EmptyState>
+                </section>
+
+                <SpineCard v-if="toReceive > 0" status="sent">
+                    <Link href="/b/receive" class="flex items-center gap-3 p-card">
+                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-light text-primary">
+                            <PackageCheck :size="20" />
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-body font-medium text-ink">
+                                {{ toReceive }} delivery<span v-if="toReceive > 1">s</span> on the way
+                            </span>
+                            <span class="block text-helper text-ink-soft">Tap to confirm what arrived.</span>
+                        </span>
+                        <ChevronRight :size="20" class="shrink-0 text-ink-muted" />
                     </Link>
                 </SpineCard>
 
-                <EmptyState
-                    v-else
-                    icon="ClipboardList"
-                    title="No requests yet"
-                    message="Tap the button at the bottom to ask the main store for stock."
-                />
-            </section>
+                <Card
+                    v-if="runningLow.length"
+                    title="Running low"
+                    hint="Below the level you set as low"
+                    :padded="false"
+                >
+                    <template #action>
+                        <Link
+                            :href="lowPrefillUrl"
+                            class="flex min-h-touch items-center gap-1 px-1 text-body font-medium text-primary"
+                        >
+                            Add all
+                            <Plus :size="16" />
+                        </Link>
+                    </template>
 
-            <!-- Anything waiting to be checked in -->
-            <SpineCard v-if="toReceive > 0" status="sent" as="div">
-                <Link href="/b/receive" class="flex items-center gap-3 p-card">
-                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-light text-primary">
-                        <PackageCheck :size="20" />
-                    </span>
-                    <span class="min-w-0 flex-1">
-                        <span class="block text-body font-medium text-ink">
-                            {{ toReceive }} delivery<span v-if="toReceive > 1">s</span> on the way
-                        </span>
-                        <span class="block text-helper text-ink-soft">Tap to confirm what arrived.</span>
-                    </span>
-                    <ChevronRight :size="20" class="shrink-0 text-ink-muted" />
-                </Link>
-            </SpineCard>
+                    <ul class="divide-y divide-line">
+                        <li
+                            v-for="item in runningLow"
+                            :key="item.id"
+                            class="flex items-center gap-3 px-card py-2.5"
+                        >
+                            <span class="h-8 w-1 shrink-0 rounded-full bg-partial" aria-hidden="true" />
 
-            <CountdownTimer :at="cutoff.at" :is-past="cutoff.is_past" :time="cutoff.time" />
-
-            <InstallPrompt />
-
-            <!-- Running low -->
-            <section v-if="runningLow.length">
-                <div class="mb-2 flex items-end justify-between gap-3">
-                    <h2 class="text-heading text-ink">Running low</h2>
-                    <Link
-                        :href="lowPrefillUrl"
-                        class="-mr-3 flex min-h-touch items-center px-3 text-body font-medium text-primary"
-                    >
-                        Add all
-                    </Link>
-                </div>
-
-                <div class="space-y-2">
-                    <SpineCard v-for="item in runningLow" :key="item.id" status="low">
-                        <div class="flex items-center gap-3 p-card">
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-body font-medium text-ink">{{ item.name }}</p>
-                                <p class="text-helper text-partial">
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-body font-medium text-ink">{{ item.name }}</span>
+                                <span class="block text-helper text-partial">
                                     {{ item.on_hand_text }} left here
-                                </p>
-                            </div>
+                                </span>
+                            </span>
+
+                            <span class="hidden text-helper text-ink-soft sm:block">
+                                suggest {{ item.suggested }} {{ item.unit }}
+                            </span>
 
                             <Link
                                 :href="`/b/ask?prefill=${item.id}`"
-                                class="flex min-h-touch items-center gap-1.5 rounded-control border border-line px-4 text-body font-medium text-primary"
+                                class="flex min-h-touch shrink-0 items-center gap-1.5 rounded-control border border-line px-3 text-body font-medium text-primary transition hover:border-primary"
                             >
-                                <Plus :size="20" />
+                                <Plus :size="16" />
                                 Add
                             </Link>
-                        </div>
-                    </SpineCard>
-                </div>
-            </section>
-        </div>
+                        </li>
+                    </ul>
+                </Card>
+            </div>
 
-        <template #action>
-            <AppButton href="/b/ask" size="lg" block>Ask for stock</AppButton>
-        </template>
+            <!-- Right: the clock, shortcuts, and getting this onto a phone -->
+            <div class="space-y-4">
+                <CountdownTimer :at="cutoff.at" :is-past="cutoff.is_past" :time="cutoff.time" />
+
+                <Card title="Quick things">
+                    <div class="grid grid-cols-2 gap-2">
+                        <Link
+                            v-for="link in quickLinks"
+                            :key="link.href"
+                            :href="link.href"
+                            class="flex min-h-touch items-center rounded-control border border-line px-3 text-body text-ink transition hover:border-primary hover:bg-primary-light"
+                        >
+                            {{ link.label }}
+                        </Link>
+                    </div>
+                </Card>
+
+                <InstallPrompt />
+            </div>
+        </div>
     </BranchLayout>
 </template>

@@ -27,7 +27,7 @@ const query = computed(() => ({
 }));
 
 function apply() {
-    router.get(`/admin/reports/${props.report.key}`, query.value, { preserveState: true, replace: true });
+    router.get(`/admin/reports/${props.report.key}`, query.value, { preserveState: true, preserveScroll: true, replace: true });
 }
 
 function exportUrl(format) {

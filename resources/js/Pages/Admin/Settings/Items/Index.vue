@@ -33,7 +33,7 @@ function reload(extra = {}) {
     router.get(
         '/admin/settings/items',
         { search: search.value || undefined, category: category.value || undefined, ...extra },
-        { preserveState: true, replace: true, only: ['items', 'filters'] },
+        { preserveState: true, preserveScroll: true, replace: true, only: ['items', 'filters'] },
     );
 }
 

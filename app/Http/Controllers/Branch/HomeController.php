@@ -30,11 +30,26 @@ class HomeController extends Controller
             ->latest('submitted_at')
             ->first();
 
+        $lowStockRows = $lowStock->itemsForBranch($branch->id);
+
         return Inertia::render('Branch/Home', [
             'greeting' => $this->greeting(),
+
+            // A laptop has room to show the whole picture at once.
+            'stats' => [
+                'waiting' => StockRequest::where('from_branch_id', $branch->id)
+                    ->where('status', RequestStatus::Waiting)->count(),
+                'on_the_way' => StockRequest::where('from_branch_id', $branch->id)
+                    ->where('status', RequestStatus::Sent)->count(),
+                'running_low' => $lowStockRows->where('is_low', true)->count(),
+                'on_shelf' => $lowStockRows->filter(fn (array $row) => $row['on_hand'] > 0)->count(),
+            ],
             'latest' => $latest ? RequestPresenter::summary($latest) : null,
             'cutoff' => $cutoff->countdown($branch),
-            'runningLow' => $lowStock->runningLow($branch->id, 6),
+            'runningLow' => $lowStockRows->where('is_low', true)
+                ->sortBy('fill_ratio')
+                ->take(8)
+                ->values(),
             'toReceive' => StockRequest::where('from_branch_id', $branch->id)
                 ->where('status', RequestStatus::Sent)
                 ->count(),

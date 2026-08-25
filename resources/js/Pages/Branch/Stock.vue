@@ -23,7 +23,7 @@ watch(search, (value) => {
 });
 
 function reload(changes = {}) {
-    router.get('/b/stock', { ...props.filters, ...changes }, { preserveState: true, replace: true });
+    router.get('/b/stock', { ...props.filters, ...changes }, { preserveState: true, preserveScroll: true, replace: true });
 }
 </script>
 

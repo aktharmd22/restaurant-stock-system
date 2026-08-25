@@ -28,7 +28,7 @@ watch(search, (value) => {
 });
 
 function reload(changes = {}) {
-    router.get('/admin/stock', { ...props.filters, ...changes }, { preserveState: true, replace: true });
+    router.get('/admin/stock', { ...props.filters, ...changes }, { preserveState: true, preserveScroll: true, replace: true });
 }
 
 function startCount() {

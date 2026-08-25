@@ -84,6 +84,7 @@ function restore(line) {
 function filterBy(changes) {
     router.get('/admin/requests', { ...props.filters, ...changes, selected: undefined }, {
         preserveState: true,
+        preserveScroll: true,
         replace: true,
     });
 }

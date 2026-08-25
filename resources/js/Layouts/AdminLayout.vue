@@ -35,9 +35,10 @@ const navItems = [
 const sidebarItems = [
     ...navItems.slice(0, 4),
     { label: 'Purchase', href: '/admin/purchase', icon: 'ShoppingCart', match: ['/admin/purchase', '/admin/suppliers'] },
+    { label: 'History', href: '/admin/history', icon: 'History', match: ['/admin/history'] },
     { label: 'Reports', href: '/admin/reports', icon: 'FileText', match: ['/admin/reports'] },
     { label: 'Thrown away', href: '/waste', icon: 'Trash2', match: ['/waste'] },
-    { label: 'Bought locally', href: '/local-purchases', icon: 'History', match: ['/local-purchases'] },
+    { label: 'Bought locally', href: '/local-purchases', icon: 'ShoppingCart', match: ['/local-purchases'] },
     navItems[4],
 ];
 

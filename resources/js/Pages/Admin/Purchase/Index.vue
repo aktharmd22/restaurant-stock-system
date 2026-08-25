@@ -21,7 +21,7 @@ const tabs = [
 ];
 
 function pick(status) {
-    router.get('/admin/purchase', { status }, { preserveState: true, replace: true });
+    router.get('/admin/purchase', { status }, { preserveState: true, preserveScroll: true, replace: true });
 }
 </script>
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\BusinessSettingsController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DispatchController;
+use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\RequestInboxController;
 use App\Http\Controllers\Admin\PurchaseOrderController;
@@ -137,6 +138,13 @@ Route::middleware('auth')->group(function () {
             Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
             Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
             Route::post('/suppliers/{supplier}/toggle', [SupplierController::class, 'toggle'])->name('suppliers.toggle');
+        });
+
+        // History: why every number is what it is.
+        Route::middleware('permission:stock.view')->group(function () {
+            Route::get('/history', [HistoryController::class, 'index'])->name('history.index');
+            Route::get('/history/changes', [HistoryController::class, 'changes'])->name('history.changes');
+            Route::get('/history/item/{item}', [HistoryController::class, 'item'])->name('history.item');
         });
 
         Route::middleware('permission:reports.view')->group(function () {
