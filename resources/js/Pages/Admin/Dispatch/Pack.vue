@@ -6,6 +6,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import Card from '@/Components/ui/Card.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
 const props = defineProps({
@@ -23,6 +24,31 @@ const form = useForm({
     lines: Object.fromEntries(sending.value.map((line) => [line.id, line.approved])),
     carrier_name: '',
     vehicle_number: '',
+});
+
+const search = ref('');
+
+/*
+ * Hides rows only. Every line keeps its number and its tick whether or not it
+ * is on screen, so hunting for one item mid-pack cannot lose the rest.
+ */
+const groups = computed(() => {
+    const term = search.value.trim().toLowerCase();
+    if (!term) return props.packList;
+
+    return props.packList
+        .map((group) => ({
+            ...group,
+            lines: group.lines.filter((line) => line.item.toLowerCase().includes(term)),
+        }))
+        .filter((group) => group.lines.length);
+});
+
+const visibleSending = computed(() => {
+    const term = search.value.trim().toLowerCase();
+    if (!term) return sending.value;
+
+    return sending.value.filter((line) => line.item.toLowerCase().includes(term));
 });
 
 const totalLines = computed(() => props.packList.reduce((sum, group) => sum + group.lines.length, 0));
@@ -135,7 +161,11 @@ function send() {
                         />
                     </div>
 
-                    <div v-for="group in packList" :key="group.location">
+                    <div v-if="totalLines > 8" class="border-b border-line px-4 py-3 sm:px-5">
+                        <SearchField v-model="search" hide-label placeholder="Find an item in this order" />
+                    </div>
+
+                    <div v-for="group in groups" :key="group.location">
                         <h3
                             class="flex items-center gap-2 border-b border-line bg-page px-4 py-2 text-helper font-medium uppercase tracking-wide text-ink-soft sm:px-5"
                         >
@@ -192,7 +222,7 @@ function send() {
                 >
                     <div class="divide-y divide-line">
                         <div
-                            v-for="line in sending"
+                            v-for="line in visibleSending"
                             :key="line.id"
                             class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2.5 sm:px-5"
                         >

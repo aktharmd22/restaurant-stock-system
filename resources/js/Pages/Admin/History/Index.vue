@@ -1,14 +1,16 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowRight, ExternalLink, Search } from 'lucide-vue-next';
+import { ArrowRight, ChevronRight, X } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import Card from '@/Components/ui/Card.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
 import StatusText from '@/Components/ui/StatusText.vue';
 import TextField from '@/Components/ui/TextField.vue';
+import { statusMeta } from '@/Support/status';
 
 const props = defineProps({
     movements: { type: Object, required: true },
@@ -27,6 +29,17 @@ watch(search, (value) => {
     timer = setTimeout(() => apply({ search: value || undefined }), 300);
 });
 
+const filtering = computed(() =>
+    Boolean(
+        search.value ||
+            props.filters.branch ||
+            props.filters.type ||
+            props.filters.from ||
+            props.filters.to ||
+            props.filters.who,
+    ),
+);
+
 function apply(changes = {}) {
     router.get('/admin/history', { ...props.filters, ...changes, page: undefined }, {
         preserveState: true,
@@ -40,7 +53,17 @@ function clearAll() {
     router.get('/admin/history');
 }
 
-const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN')}`;
+/*
+ * The whole row goes to the item's own history at that branch. It used to
+ * carry two competing blue links - the item and the reason - plus a stray
+ * icon floating at the right edge, so the eye had three things to consider
+ * before it could read the number it came for.
+ */
+function rowHref(row) {
+    return `/admin/history/item/${row.item_id}?branch=${props.filters.branch ?? ''}`;
+}
+
+const dot = (row) => statusMeta(row.tone).spine;
 </script>
 
 <template>
@@ -57,24 +80,15 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
             </Link>
         </template>
 
-        <Card title="Narrow it down" hint="Everything below matches what you pick here">
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-                <div class="sm:col-span-2 xl:col-span-2">
-                    <label class="mb-1.5 block text-helper text-ink-soft">Item</label>
-                    <div class="relative">
-                        <Search
-                            :size="16"
-                            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted"
-                        />
-                        <input
-                            v-model="search"
-                            type="search"
-                            placeholder="Search by item name"
-                            aria-label="Search by item name"
-                            class="min-h-control w-full rounded-control border border-line bg-surface pl-9 pr-3 text-body text-ink focus:border-primary focus:shadow-focus focus:outline-none focus:ring-0"
-                        />
-                    </div>
-                </div>
+        <!-- Five questions, one row of controls. -->
+        <Card>
+            <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+                <SearchField
+                    v-model="search"
+                    label="Item"
+                    placeholder="Search by item name"
+                    class="sm:col-span-2 xl:col-span-1"
+                />
 
                 <SelectField
                     label="Branch"
@@ -92,6 +106,14 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
                     @update:model-value="(v) => apply({ type: v || undefined })"
                 />
 
+                <SelectField
+                    label="Who did it"
+                    :model-value="filters.who ?? ''"
+                    placeholder="Anyone"
+                    :options="people"
+                    @update:model-value="(v) => apply({ who: v || undefined })"
+                />
+
                 <TextField
                     label="From"
                     type="date"
@@ -107,112 +129,69 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
                 />
             </div>
 
-            <div class="mt-3 flex flex-wrap items-center gap-3">
-                <SelectField
-                    class="min-w-[200px]"
-                    label="Who did it"
-                    :model-value="filters.who ?? ''"
-                    placeholder="Anyone"
-                    :options="people"
-                    @update:model-value="(v) => apply({ who: v || undefined })"
-                />
-
-                <button
-                    type="button"
-                    class="mt-6 flex min-h-touch items-center rounded-control px-3 text-body text-primary hover:bg-primary-light"
-                    @click="clearAll"
-                >
-                    Clear all
-                </button>
-            </div>
+            <button
+                v-if="filtering"
+                type="button"
+                class="mt-2 inline-flex min-h-touch items-center gap-1.5 text-body text-primary"
+                @click="clearAll"
+            >
+                <X :size="14" />
+                Clear what I picked
+            </button>
         </Card>
 
-        <Card class="mt-4" :padded="false" :title="`${movements.total} movement${movements.total === 1 ? '' : 's'}`">
+        <Card
+            class="mt-4"
+            :padded="false"
+            :title="`${movements.total} movement${movements.total === 1 ? '' : 's'}`"
+        >
             <div v-if="movements.data.length">
-                <!-- Laptop: the full picture in one row -->
-                <div class="hidden overflow-x-auto lg:block">
-                    <table class="w-full text-body">
-                        <thead class="border-b border-line text-left text-helper text-ink-soft">
-                            <tr>
-                                <th class="whitespace-nowrap px-card py-2.5 font-normal">When</th>
-                                <th class="px-card py-2.5 font-normal">Item</th>
-                                <th class="whitespace-nowrap px-card py-2.5 font-normal">Branch</th>
-                                <th class="whitespace-nowrap px-card py-2.5 font-normal">What happened</th>
-                                <th class="whitespace-nowrap px-card py-2.5 text-right font-normal">Change</th>
-                                <th class="whitespace-nowrap px-card py-2.5 text-right font-normal">Left after</th>
-                                <th class="whitespace-nowrap px-card py-2.5 font-normal">Who</th>
-                                <th class="px-card py-2.5 font-normal">Why</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-line">
-                            <tr v-for="row in movements.data" :key="row.id" class="hover:bg-page">
-                                <td class="whitespace-nowrap px-card py-2.5 text-ink-soft">{{ row.when_short }}</td>
-                                <td class="px-card py-2.5">
-                                    <Link
-                                        :href="`/admin/history/item/${row.item_id}?branch=${filters.branch ?? ''}`"
-                                        class="font-medium text-primary"
-                                    >
-                                        {{ row.item }}
-                                    </Link>
-                                </td>
-                                <td class="whitespace-nowrap px-card py-2.5 text-ink">{{ row.branch }}</td>
-                                <td class="whitespace-nowrap px-card py-2.5">
-                                    <StatusText :status="row.tone" :label="row.what" size="sm" />
-                                </td>
-                                <td
-                                    class="whitespace-nowrap px-card py-2.5 text-right tabular font-medium"
-                                    :class="row.direction === 'in' ? 'text-approved' : 'text-rejected'"
-                                >
-                                    {{ row.amount }}
-                                </td>
-                                <td class="whitespace-nowrap px-card py-2.5 text-right tabular text-ink">
-                                    {{ row.balance_after }}
-                                </td>
-                                <td class="whitespace-nowrap px-card py-2.5 text-ink-soft">{{ row.who }}</td>
-                                <td class="px-card py-2.5">
-                                    <component
-                                        :is="row.why_url ? Link : 'span'"
-                                        :href="row.why_url ?? undefined"
-                                        class="inline-flex items-center gap-1"
-                                        :class="row.why_url ? 'text-primary' : 'text-ink-soft'"
-                                    >
-                                        {{ row.why }}
-                                        <ExternalLink v-if="row.why_url" :size="14" />
-                                    </component>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <!-- One row, one destination. The numbers keep their own
+                     columns so a page of them can still be read down. -->
+                <div class="divide-y divide-line">
+                    <Link
+                        v-for="row in movements.data"
+                        :key="row.id"
+                        :href="rowHref(row)"
+                        class="flex items-center gap-3 px-4 py-3 transition hover:bg-page sm:gap-4 sm:px-5"
+                    >
+                        <span
+                            class="h-2 w-2 shrink-0 rounded-full"
+                            :style="{ backgroundColor: dot(row) }"
+                            aria-hidden="true"
+                        />
 
-                <!-- Phone: the same facts, stacked -->
-                <div class="divide-y divide-line lg:hidden">
-                    <div v-for="row in movements.data" :key="row.id" class="p-card">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="text-body font-medium text-ink">{{ row.item }}</p>
-                                <p class="text-helper text-ink-soft">{{ row.branch }} · {{ row.when_short }}</p>
-                            </div>
-                            <p
-                                class="shrink-0 text-qty tabular"
+                        <span class="min-w-0 flex-1">
+                            <span class="flex flex-wrap items-baseline gap-x-2">
+                                <span class="text-body font-medium text-ink">{{ row.item }}</span>
+                                <span class="text-helper text-ink-muted">
+                                    {{ row.when_short }} · {{ row.branch }} · {{ row.who }}
+                                </span>
+                            </span>
+
+                            <span class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <StatusText :status="row.tone" :label="row.what" size="sm" />
+                                <span class="truncate text-helper text-ink-soft">{{ row.why }}</span>
+                            </span>
+                        </span>
+
+                        <span class="shrink-0 text-right sm:w-24">
+                            <span
+                                class="block text-body tabular font-medium"
                                 :class="row.direction === 'in' ? 'text-approved' : 'text-rejected'"
                             >
                                 {{ row.amount }}
-                            </p>
-                        </div>
-
-                        <div class="mt-2 flex flex-wrap items-center gap-2">
-                            <StatusText :status="row.tone" :label="row.what" size="sm" />
-                            <span class="text-helper text-ink-soft">
-                                left {{ row.balance_after }} · {{ row.who }}
                             </span>
-                        </div>
+                            <span class="block text-helper tabular text-ink-muted">
+                                left {{ row.balance_after }}
+                            </span>
+                        </span>
 
-                        <p class="mt-2 text-helper text-ink-soft">{{ row.why }}</p>
-                    </div>
+                        <ChevronRight :size="16" class="shrink-0 text-ink-muted" aria-hidden="true" />
+                    </Link>
                 </div>
 
-                <div class="p-card">
+                <div class="px-4 pb-4 sm:px-5">
                     <Pagination :links="movements.links" :meta="movements" />
                 </div>
             </div>
@@ -221,7 +200,7 @@ const money = (value) => `${props.currency}${Number(value).toLocaleString('en-IN
                 <EmptyState
                     icon="History"
                     title="Nothing matches that"
-                    message="Try a wider date range, or clear the filters."
+                    message="Try a wider date range, or clear what you picked."
                 />
             </div>
         </Card>

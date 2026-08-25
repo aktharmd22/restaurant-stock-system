@@ -85,6 +85,17 @@ function restore(line) {
 
 const search = ref(props.filters.search ?? '');
 
+// A separate box for the request that is open: forty-eight lines is a lot to
+// scroll when the branch has rung up about one of them.
+const lineSearch = ref('');
+
+const visibleLines = computed(() => {
+    const term = lineSearch.value.trim().toLowerCase();
+    const lines = props.selected?.lines ?? [];
+
+    return term ? lines.filter((line) => line.item.toLowerCase().includes(term)) : lines;
+});
+
 let searchTimer = null;
 
 watch(search, (value) => {
@@ -223,9 +234,20 @@ function approveAll() {
                     </div>
 
                     <!-- Lines -->
+                    <div
+                        v-if="(selected.lines?.length ?? 0) > 8"
+                        class="border-b border-line p-card lg:p-card-lg"
+                    >
+                        <SearchField
+                            v-model="lineSearch"
+                            hide-label
+                            placeholder="Find an item in this request"
+                        />
+                    </div>
+
                     <div class="divide-y divide-line">
                         <div
-                            v-for="line in selected.lines"
+                            v-for="line in visibleLines"
                             :key="line.id"
                             class="p-card lg:p-card-lg"
                             :class="line.is_short && isWaiting ? 'bg-partial-bg/50' : ''"

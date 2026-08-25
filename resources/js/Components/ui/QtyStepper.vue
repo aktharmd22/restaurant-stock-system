@@ -117,20 +117,20 @@ onBeforeUnmount(stopHold);
         </button>
 
         <!--
-            The wrapper is a fixed width, and the input is told size="1". Left at
-            its default an input asks for twenty characters of room, and because
-            nothing here shrinks, that pushed the whole control wider the moment
-            anyone tapped the number.
+            The input is sized to the digits it holds. Left at its default an
+            input asks for twenty characters of room, and because nothing here
+            shrinks, that pushed the whole card wider the moment anyone tapped
+            the number - and a fixed width made the control jump instead.
         -->
-        <div class="flex h-touch w-[84px] shrink-0 items-center justify-center gap-1 border-x border-line px-2">
+        <div class="flex h-touch min-w-[84px] shrink-0 items-center justify-center gap-1 border-x border-line px-2">
             <template v-if="editing">
                 <input
                     ref="numberInput"
                     v-model="draft"
                     type="text"
-                    size="1"
+                    :size="Math.max(3, draft.length)"
                     inputmode="decimal"
-                    class="h-touch w-full min-w-0 border-0 bg-transparent p-0 text-center text-qty text-ink focus:ring-0"
+                    class="h-touch w-auto min-w-0 border-0 bg-transparent p-0 text-center text-qty text-ink focus:ring-0"
                     :aria-label="label"
                     @blur="commitEditing"
                     @keydown.enter.prevent="commitEditing"
@@ -144,7 +144,7 @@ onBeforeUnmount(stopHold);
                 :aria-label="`${label}: ${display} ${unit}. Tap to type a number.`"
                 @click="startEditing"
             >
-                <span class="truncate">{{ display }}</span>
+                <span>{{ display }}</span>
                 <span v-if="unit" class="shrink-0 text-helper font-normal text-ink-soft">{{ unit }}</span>
             </button>
         </div>

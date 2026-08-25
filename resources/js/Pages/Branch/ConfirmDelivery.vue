@@ -5,6 +5,7 @@ import { Camera, CheckCircle2 } from 'lucide-vue-next';
 import BranchLayout from '@/Layouts/BranchLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import Card from '@/Components/ui/Card.vue';
 
 const props = defineProps({
@@ -27,6 +28,16 @@ const lines = ref(
 const form = useForm({ lines: {}, photos: {} });
 
 const sentLines = computed(() => props.request.lines.filter((line) => (line.sent ?? 0) > 0));
+
+const search = ref('');
+
+// Hides rows only: what has already been typed stays in `lines`.
+const visibleLines = computed(() => {
+    const term = search.value.trim().toLowerCase();
+    if (!term) return sentLines.value;
+
+    return sentLines.value.filter((line) => line.item.toLowerCase().includes(term));
+});
 
 const shortLines = computed(() =>
     sentLines.value.filter((line) => lines.value[line.id].qty < line.sent),
@@ -75,9 +86,13 @@ function confirm() {
         </div>
 
         <Card :padded="false">
+            <div v-if="sentLines.length > 8" class="border-b border-line px-4 py-3 sm:px-5">
+                <SearchField v-model="search" hide-label placeholder="Find an item in this delivery" />
+            </div>
+
             <div class="divide-y divide-line">
                 <div
-                    v-for="line in sentLines"
+                    v-for="line in visibleLines"
                     :key="line.id"
                     class="px-4 py-3.5 sm:px-5"
                     :class="lines[line.id].qty < line.sent ? 'bg-partial-bg/40' : ''"
