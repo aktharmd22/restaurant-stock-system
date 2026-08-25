@@ -1,7 +1,7 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { ChevronRight } from 'lucide-vue-next';
+import { ChevronDown, ChevronRight } from 'lucide-vue-next';
 import { icons } from '@/Support/icons';
 
 import BottomNav from '@/Components/ui/BottomNav.vue';
@@ -31,16 +31,55 @@ const navItems = [
     { label: 'Settings', href: '/admin/settings', icon: 'Settings', match: ['/admin/settings'] },
 ];
 
-// The sidebar has room for everything.
-const sidebarItems = [
+const can = computed(() => user.value.can ?? {});
+
+/*
+ * The sidebar has room for everything.
+ *
+ * Three of these sections are really a folder of pages, and burying them one
+ * click deep meant nobody found Suppliers or Item groups without going the
+ * long way round. They open in place instead, and only ever list doors this
+ * person can actually walk through.
+ */
+const sidebarItems = computed(() => [
     ...navItems.slice(0, 4),
-    { label: 'Purchase', href: '/admin/purchase', icon: 'ShoppingCart', match: ['/admin/purchase', '/admin/suppliers'] },
-    { label: 'History', href: '/admin/history', icon: 'History', match: ['/admin/history'] },
+    {
+        label: 'Purchase',
+        href: '/admin/purchase',
+        icon: 'ShoppingCart',
+        match: ['/admin/purchase', '/admin/suppliers'],
+        children: [
+            { label: 'Orders', href: '/admin/purchase', match: ['/admin/purchase'] },
+            { label: 'What to buy', href: '/admin/purchase/suggestions', match: ['/admin/purchase/suggestions'] },
+            { label: 'Suppliers', href: '/admin/suppliers', match: ['/admin/suppliers'] },
+        ],
+    },
+    {
+        label: 'History',
+        href: '/admin/history',
+        icon: 'History',
+        match: ['/admin/history'],
+        children: [
+            { label: 'Stock movements', href: '/admin/history', match: ['/admin/history'] },
+            { label: 'Record changes', href: '/admin/history/changes', match: ['/admin/history/changes'] },
+        ],
+    },
     { label: 'Reports', href: '/admin/reports', icon: 'FileText', match: ['/admin/reports'] },
     { label: 'Thrown away', href: '/waste', icon: 'Trash2', match: ['/waste'] },
     { label: 'Bought locally', href: '/local-purchases', icon: 'ShoppingCart', match: ['/local-purchases'] },
-    navItems[4],
-];
+    {
+        ...navItems[4],
+        children: [
+            { label: 'Restaurant name', href: '/admin/settings/business', match: ['/admin/settings/business'], show: can.value.settings },
+            { label: 'Branches', href: '/admin/settings/branches', match: ['/admin/settings/branches'], show: can.value.branches },
+            { label: 'Items', href: '/admin/settings/items', match: ['/admin/settings/items'], show: can.value.settings },
+            { label: 'Item groups', href: '/admin/settings/categories', match: ['/admin/settings/categories'], show: can.value.settings },
+            { label: 'People', href: '/admin/settings/users', match: ['/admin/settings/users'], show: can.value.users },
+            { label: 'Your details', href: '/settings/profile', match: ['/settings/profile'] },
+            { label: 'Sound', href: '/settings/sound', match: ['/settings/sound'] },
+        ].filter((child) => child.show !== false),
+    },
+]);
 
 function matchLength(item, path) {
     return item.match.reduce((best, prefix) => {
@@ -49,16 +88,53 @@ function matchLength(item, path) {
     }, 0);
 }
 
-// Every nav prefix starts with /admin, so a plain "does it match" test lights
-// up Dashboard on every admin page. The most specific match wins instead.
+/*
+ * Every nav prefix starts with /admin, so a plain "does it match" test lights
+ * up Dashboard on every admin page. The most specific match wins instead, and
+ * a section's own children count as candidates - otherwise Purchase and
+ * "Suppliers" would both light up at once.
+ */
+const allMatchable = computed(() =>
+    sidebarItems.value.flatMap((item) => [item, ...(item.children ?? [])]),
+);
+
 function isActive(item) {
     const path = currentPath.value;
     const mine = matchLength(item, path);
 
     if (mine === 0) return false;
 
-    return !sidebarItems.some((other) => matchLength(other, path) > mine);
+    return !allMatchable.value.some((other) => matchLength(other, path) > mine);
 }
+
+// A section counts as "you are in here" when the page belongs to any of it.
+function inSection(item) {
+    return (
+        matchLength(item, currentPath.value) > 0 ||
+        (item.children ?? []).some((child) => matchLength(child, currentPath.value) > 0)
+    );
+}
+
+const openSections = ref(new Set());
+
+// Opening the page you are on: the section you are inside starts open.
+watch(
+    currentPath,
+    () => {
+        const here = sidebarItems.value.find((item) => item.children && inSection(item));
+
+        if (here) openSections.value = new Set([here.label]);
+    },
+    { immediate: true },
+);
+
+function toggleSection(item) {
+    // One at a time. Three sections open at once ran the list off the bottom
+    // of the panel, and nobody needs two folders open to find one page.
+    openSections.value = openSections.value.has(item.label) ? new Set() : new Set([item.label]);
+}
+
+const isOpen = (item) => openSections.value.has(item.label);
 </script>
 
 <template>
@@ -83,28 +159,90 @@ function isActive(item) {
                 </span>
             </div>
 
-            <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-2" aria-label="Main">
-                <Link
-                    v-for="item in sidebarItems"
-                    :key="item.href"
-                    :href="item.href"
-                    class="group flex min-h-touch items-center gap-3 rounded-control px-3 text-body transition"
-                    :class="
-                        isActive(item)
-                            ? 'bg-primary font-medium text-white'
-                            : 'text-shell-text hover:bg-shell-soft hover:text-white'
-                    "
-                    :aria-current="isActive(item) ? 'page' : undefined"
-                >
-                    <component :is="icons[item.icon]" :size="18" aria-hidden="true" />
-                    <span class="flex-1 truncate">{{ item.label }}</span>
-                    <ChevronRight
-                        :size="16"
-                        class="shrink-0 transition"
-                        :class="isActive(item) ? 'opacity-70' : 'opacity-0 group-hover:opacity-50'"
-                        aria-hidden="true"
-                    />
-                </Link>
+            <!-- Tight enough that the longest menu anyone has - the owner's,
+                 with Settings open - still fits a laptop without scrolling. -->
+            <nav class="shell-scroll flex-1 space-y-0.5 overflow-y-auto px-3 py-2" aria-label="Main">
+                <div v-for="item in sidebarItems" :key="item.label">
+                    <!-- A section that holds pages: going there and opening it
+                         are two different taps, so they are two targets. -->
+                    <div
+                        v-if="item.children"
+                        class="flex min-h-touch items-center rounded-control transition"
+                        :class="
+                            isActive(item)
+                                ? 'bg-primary text-white'
+                                : 'text-shell-text hover:bg-shell-soft hover:text-white'
+                        "
+                    >
+                        <Link
+                            :href="item.href"
+                            class="flex min-h-touch flex-1 items-center gap-3 rounded-l-control px-3 text-body"
+                            :class="isActive(item) ? 'font-medium' : ''"
+                            :aria-current="isActive(item) ? 'page' : undefined"
+                        >
+                            <component :is="icons[item.icon]" :size="18" aria-hidden="true" />
+                            <span class="flex-1 truncate">{{ item.label }}</span>
+                        </Link>
+
+                        <button
+                            type="button"
+                            class="flex h-touch w-10 shrink-0 items-center justify-center rounded-r-control"
+                            :aria-expanded="isOpen(item)"
+                            :aria-label="`${isOpen(item) ? 'Hide' : 'Show'} what is under ${item.label}`"
+                            @click="toggleSection(item)"
+                        >
+                            <ChevronDown
+                                :size="16"
+                                class="transition duration-200"
+                                :class="isOpen(item) ? 'rotate-180' : 'opacity-60'"
+                                aria-hidden="true"
+                            />
+                        </button>
+                    </div>
+
+                    <Link
+                        v-else
+                        :href="item.href"
+                        class="group flex min-h-touch items-center gap-3 rounded-control px-3 text-body transition"
+                        :class="
+                            isActive(item)
+                                ? 'bg-primary font-medium text-white'
+                                : 'text-shell-text hover:bg-shell-soft hover:text-white'
+                        "
+                        :aria-current="isActive(item) ? 'page' : undefined"
+                    >
+                        <component :is="icons[item.icon]" :size="18" aria-hidden="true" />
+                        <span class="flex-1 truncate">{{ item.label }}</span>
+                        <ChevronRight
+                            :size="16"
+                            class="shrink-0 transition"
+                            :class="isActive(item) ? 'opacity-70' : 'opacity-0 group-hover:opacity-50'"
+                            aria-hidden="true"
+                        />
+                    </Link>
+
+                    <!-- The rule down the left says these belong to the section
+                         above without needing a second icon each. -->
+                    <div
+                        v-if="item.children && isOpen(item)"
+                        class="ml-6 mt-1 space-y-0.5 border-l border-shell-line pl-3"
+                    >
+                        <Link
+                            v-for="child in item.children"
+                            :key="child.href"
+                            :href="child.href"
+                            class="flex min-h-[38px] items-center rounded-control px-3 text-body transition"
+                            :class="
+                                isActive(child)
+                                    ? 'bg-shell-soft font-medium text-white'
+                                    : 'text-shell-text hover:bg-shell-soft hover:text-white'
+                            "
+                            :aria-current="isActive(child) ? 'page' : undefined"
+                        >
+                            <span class="truncate">{{ child.label }}</span>
+                        </Link>
+                    </div>
+                </div>
             </nav>
 
             <div class="border-t border-shell-line px-3 py-3">

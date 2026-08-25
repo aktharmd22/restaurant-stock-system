@@ -49,6 +49,20 @@ class HandleInertiaRequests extends Middleware
                         'code' => $user->branch->code,
                         'type' => $user->branch->type,
                     ] : null,
+
+                    /*
+                     * What this person is allowed to do, so the menu can show
+                     * them only doors that open. The server still checks every
+                     * one of these on the way in - this is for the menu, not
+                     * for security.
+                     */
+                    'can' => [
+                        'settings' => $user->can('settings.manage'),
+                        'branches' => $user->can('branches.manage'),
+                        'users' => $user->can('users.manage'),
+                        'purchase' => $user->can('purchase.manage'),
+                        'reports' => $user->can('reports.view'),
+                    ],
                 ] : null,
             ],
 
