@@ -1,11 +1,15 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
-import { ClipboardCheck, TrendingDown, X } from 'lucide-vue-next';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ClipboardCheck, Clock, Pencil, Scale, Trash2, TrendingDown, X } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
+import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import Card from '@/Components/ui/Card.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
+import QtyStepper from '@/Components/ui/QtyStepper.vue';
+import RowMenu from '@/Components/ui/RowMenu.vue';
+import RowMenuItem from '@/Components/ui/RowMenuItem.vue';
 import SearchField from '@/Components/ui/SearchField.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
 import StatCard from '@/Components/ui/StatCard.vue';
@@ -19,6 +23,7 @@ const props = defineProps({
     totals: { type: Object, required: true },
     filters: { type: Object, required: true },
     openCount: { type: [Number, null], default: null },
+    canAdjust: { type: Boolean, default: false },
 });
 
 const search = ref(props.filters.search ?? '');
@@ -61,6 +66,50 @@ function clearFilters() {
 
 function startCount() {
     router.post('/admin/stock/count', { branch: props.branch.id });
+}
+
+/*
+ * Correcting a number.
+ *
+ * You cannot edit a stock balance, and you should not want to: the number is
+ * the sum of everything that ever happened to the item. So the question the
+ * sheet asks is "what is actually on the shelf", and the app writes the
+ * difference to the ledger with the reason attached.
+ */
+const correcting = ref(null);
+
+const correction = useForm({ branch_id: null, item_id: null, counted: 0, reason: '' });
+
+const REASONS = [
+    'Counted it and this is what is there',
+    'Found more than the app said',
+    'Damaged, thrown out earlier',
+    'Someone typed the wrong number before',
+    'Spilled or lost',
+];
+
+const difference = computed(() => {
+    if (!correcting.value) return 0;
+
+    return Math.round((correction.counted - correcting.value.on_hand) * 100) / 100;
+});
+
+function openCorrection(row) {
+    correcting.value = row;
+    correction.clearErrors();
+    correction.branch_id = props.branch.id;
+    correction.item_id = row.id;
+    correction.counted = row.on_hand;
+    correction.reason = '';
+}
+
+function saveCorrection() {
+    correction.post('/admin/stock/correct', {
+        preserveScroll: true,
+        onSuccess: () => {
+            correcting.value = null;
+        },
+    });
 }
 </script>
 
@@ -156,6 +205,7 @@ function startCount() {
                         </th>
                         <th class="whitespace-nowrap px-4 py-3 text-right font-normal">Full shelf</th>
                         <th class="whitespace-nowrap px-4 py-3 text-right font-normal">Use by</th>
+                        <th class="px-4 py-3" style="width: 56px"><span class="sr-only">Actions</span></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-line">
@@ -199,6 +249,26 @@ function startCount() {
                         <td class="whitespace-nowrap px-4 py-3 text-right tabular text-ink-soft">
                             {{ row.use_by ?? '—' }}
                         </td>
+                        <td class="px-2 py-1">
+                            <RowMenu :label="`More for ${row.name}`">
+                                <RowMenuItem v-if="canAdjust" @click="openCorrection(row)">
+                                    <template #icon><Scale :size="16" /></template>
+                                    Correct the number
+                                </RowMenuItem>
+                                <RowMenuItem :href="`/waste?item=${row.id}&branch=${branch.id}`">
+                                    <template #icon><Trash2 :size="16" /></template>
+                                    Throw some away
+                                </RowMenuItem>
+                                <RowMenuItem :href="`/admin/history/item/${row.id}?branch=${branch.id}`">
+                                    <template #icon><Clock :size="16" /></template>
+                                    See its history
+                                </RowMenuItem>
+                                <RowMenuItem :href="`/admin/settings/items/${row.id}/edit`">
+                                    <template #icon><Pencil :size="16" /></template>
+                                    Edit the item
+                                </RowMenuItem>
+                            </RowMenu>
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -214,14 +284,35 @@ function startCount() {
                                 <p class="truncate text-body font-medium text-ink">{{ row.name }}</p>
                                 <p class="truncate text-helper text-ink-soft">{{ row.category }}</p>
                             </div>
-                            <div class="shrink-0 text-right">
-                                <p
-                                    class="text-qty tabular"
-                                    :class="row.is_low ? 'text-partial' : 'text-ink'"
-                                >
-                                    {{ row.on_hand_text }}
-                                </p>
-                                <p v-if="row.is_low" class="text-micro font-medium text-partial">low</p>
+                            <div class="flex shrink-0 items-start gap-1">
+                                <div class="text-right">
+                                    <p
+                                        class="text-qty tabular"
+                                        :class="row.is_low ? 'text-partial' : 'text-ink'"
+                                    >
+                                        {{ row.on_hand_text }}
+                                    </p>
+                                    <p v-if="row.is_low" class="text-micro font-medium text-partial">low</p>
+                                </div>
+
+                                <RowMenu :label="`More for ${row.name}`">
+                                    <RowMenuItem v-if="canAdjust" @click="openCorrection(row)">
+                                        <template #icon><Scale :size="16" /></template>
+                                        Correct the number
+                                    </RowMenuItem>
+                                    <RowMenuItem :href="`/waste?item=${row.id}&branch=${branch.id}`">
+                                        <template #icon><Trash2 :size="16" /></template>
+                                        Throw some away
+                                    </RowMenuItem>
+                                    <RowMenuItem :href="`/admin/history/item/${row.id}?branch=${branch.id}`">
+                                        <template #icon><Clock :size="16" /></template>
+                                        See its history
+                                    </RowMenuItem>
+                                    <RowMenuItem :href="`/admin/settings/items/${row.id}/edit`">
+                                        <template #icon><Pencil :size="16" /></template>
+                                        Edit the item
+                                    </RowMenuItem>
+                                </RowMenu>
                             </div>
                         </div>
 
@@ -263,5 +354,78 @@ function startCount() {
                 <AppButton variant="secondary" @click="clearFilters">Clear what I picked</AppButton>
             </template>
         </EmptyState>
+
+        <BottomSheet
+            :open="correcting !== null"
+            :title="`Correct ${correcting?.name}`"
+            description="Say what is actually on the shelf. The app works out the difference and writes it down with your reason."
+            @close="correcting = null"
+        >
+            <div v-if="correcting" class="space-y-4">
+                <div class="flex items-center justify-between gap-3 rounded-control bg-page px-4 py-3">
+                    <span class="text-body text-ink-soft">The app thinks</span>
+                    <span class="text-qty tabular text-ink">{{ correcting.on_hand_text }}</span>
+                </div>
+
+                <div>
+                    <p class="mb-2 text-helper text-ink-soft">What is actually there</p>
+                    <QtyStepper
+                        v-model="correction.counted"
+                        :step="correcting.step ?? 1"
+                        :decimals="correcting.decimals ?? 2"
+                        :unit="correcting.unit"
+                        :label="correcting.name"
+                    />
+                    <p v-if="correction.errors.counted" class="mt-2 text-helper text-rejected">
+                        {{ correction.errors.counted }}
+                    </p>
+                </div>
+
+                <!-- The difference, said out loud before it is saved. -->
+                <p v-if="difference !== 0" class="text-body" :class="difference > 0 ? 'text-approved' : 'text-rejected'">
+                    That {{ difference > 0 ? 'adds' : 'takes off' }}
+                    <span class="tabular font-medium">
+                        {{ Math.abs(difference) }} {{ correcting.unit }}
+                    </span>.
+                </p>
+                <p v-else class="text-body text-ink-soft">That is the same number. Nothing will change.</p>
+
+                <div>
+                    <p class="mb-2 text-helper text-ink-soft">Why</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button
+                            v-for="reason in REASONS"
+                            :key="reason"
+                            type="button"
+                            class="min-h-touch rounded-full border px-4 text-body transition"
+                            :class="
+                                correction.reason === reason
+                                    ? 'border-primary bg-primary-light font-medium text-primary'
+                                    : 'border-line bg-surface text-ink-soft hover:text-ink'
+                            "
+                            @click="correction.reason = reason"
+                        >
+                            {{ reason }}
+                        </button>
+                    </div>
+                    <p v-if="correction.errors.reason" class="mt-2 text-helper text-rejected">
+                        {{ correction.errors.reason }}
+                    </p>
+                </div>
+            </div>
+
+            <template #footer>
+                <AppButton
+                    block
+                    size="lg"
+                    :disabled="!correction.reason || difference === 0"
+                    :loading="correction.processing"
+                    loading-text="Writing it down…"
+                    @click="saveCorrection"
+                >
+                    Save the correction
+                </AppButton>
+            </template>
+        </BottomSheet>
     </AdminLayout>
 </template>

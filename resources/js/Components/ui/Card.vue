@@ -19,7 +19,9 @@ defineProps({
         >
             <div class="min-w-0">
                 <h2 class="truncate text-heading text-ink">{{ title }}</h2>
-                <p v-if="hint" class="truncate text-helper text-ink-soft">{{ hint }}</p>
+                <!-- The hint is a sentence, so it wraps. Cutting it at the card
+                     edge left instructions ending in an ellipsis. -->
+                <p v-if="hint" class="text-helper text-ink-soft">{{ hint }}</p>
             </div>
 
             <slot name="action" />

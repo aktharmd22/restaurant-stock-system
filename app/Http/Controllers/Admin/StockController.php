@@ -7,9 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Category;
 use App\Models\Item;
+use App\Models\StockBalance;
 use App\Models\StockCount;
+use App\Services\Stock\StockLedgerService;
 use App\Services\Stock\StockOperationsService;
 use App\Services\Stock\StockViewService;
+use App\Support\Quantity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -60,11 +63,64 @@ class StockController extends Controller
                 'category' => $request->integer('category') ?: null,
                 'show' => $show,
             ],
+            'canAdjust' => $request->user()->can('stock.adjust'),
             'openCount' => StockCount::withoutBranchScope()
                 ->where('branch_id', $branch->id)
                 ->where('status', 'open')
                 ->value('id'),
         ]);
+    }
+
+    /**
+     * Correct one number on the spot.
+     *
+     * You never edit a balance: you say what is really on the shelf, and the
+     * difference is written to the ledger as a movement with a reason on it.
+     * That way the number and the story behind it can never disagree, which is
+     * the whole point of keeping a ledger in the first place.
+     */
+    public function correct(Request $request, StockLedgerService $ledger): RedirectResponse
+    {
+        $validated = $request->validate([
+            'branch_id' => ['required', 'exists:branches,id'],
+            'item_id' => ['required', 'exists:items,id'],
+            'counted' => ['required', 'numeric', 'min:0', 'max:1000000'],
+            'reason' => ['required', 'string', 'max:160'],
+        ], [
+            'counted.required' => 'Say how much is actually there.',
+            'reason.required' => 'Say why the number is changing. Whoever reads this later will need it.',
+        ]);
+
+        $item = Item::findOrFail($validated['item_id']);
+        $branch = Branch::findOrFail($validated['branch_id']);
+
+        $onHand = (int) (StockBalance::withoutBranchScope()
+            ->where('branch_id', $branch->id)
+            ->where('item_id', $item->id)
+            ->value('qty_on_hand') ?? 0);
+
+        $counted = Quantity::fromOrderUnit($validated['counted'], $item);
+        $delta = $counted->baseUnits - $onHand;
+
+        if ($delta === 0) {
+            return back()->with('info', "{$item->name} was already right. Nothing changed.");
+        }
+
+        $ledger->adjustment(
+            $branch->id,
+            Quantity::fromBase($delta, $item),
+            null,
+            $request->user(),
+            $validated['reason'],
+        );
+
+        $movement = $item->quantity(abs($delta))->forDisplay();
+        $direction = $delta > 0 ? 'added to' : 'taken off';
+
+        return back()->with(
+            'success',
+            "{$item->name} at {$branch->name} is now {$counted->forDisplay()}. {$movement} {$direction} the shelf.",
+        );
     }
 
     /**

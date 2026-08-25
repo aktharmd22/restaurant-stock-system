@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Camera, Plus, Trash2 } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -64,6 +64,16 @@ const form = useForm({
 });
 
 const chosenItem = computed(() => props.items.find((item) => item.id === Number(form.item_id)));
+
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search);
+    const item = Number(params.get('item'));
+
+    if (item && props.items.some((candidate) => candidate.id === item)) {
+        form.item_id = item;
+        sheetOpen.value = true;
+    }
+});
 
 function pickPhoto(event) {
     form.photo = event.target.files?.[0] ?? null;

@@ -33,6 +33,7 @@ class StockLedger extends Model
         'movement_type',
         'reference_type',
         'reference_id',
+        'note',
         'unit_cost',
         'balance_after',
         'created_by',

@@ -115,9 +115,12 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/dispatch', [DispatchController::class, 'index'])->name('dispatch.index');
         Route::get('/dispatch/{stockRequest}', [DispatchController::class, 'show'])->name('dispatch.show');
+        Route::get('/dispatch/{stockRequest}/pdf', [DispatchController::class, 'pdf'])->name('dispatch.pdf');
         Route::post('/dispatch/{stockRequest}', [DispatchController::class, 'store'])->name('dispatch.store');
 
         Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+        Route::post('/stock/correct', [StockController::class, 'correct'])
+            ->middleware('permission:stock.adjust')->name('stock.correct');
         Route::post('/stock/count', [StockController::class, 'startCount'])
             ->middleware('permission:stock.count')->name('stock.count.start');
         Route::get('/stock/count/{stockCount}', [StockController::class, 'count'])

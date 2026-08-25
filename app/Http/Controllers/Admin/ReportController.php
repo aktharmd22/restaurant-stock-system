@@ -56,6 +56,7 @@ class ReportController extends Controller
             return Pdf::loadView('pdf.report', [
                 'report' => $report,
                 'business' => setting('business_name'),
+                'tagline' => setting('business_tagline'),
                 'currency' => setting('currency_symbol'),
             ])
                 ->setPaper('a4', 'landscape')

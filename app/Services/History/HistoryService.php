@@ -132,7 +132,9 @@ class HistoryService
             'balance_after' => $item->quantity($row->balance_after)->forDisplay(),
 
             'who' => $row->createdBy?->name ?? 'The system',
-            'why' => $cause['text'] ?? $this->fallbackCause($type),
+            // A hand correction has no cause to point at, so it carries its
+            // own reason. That beats "Corrected by hand" and nothing else.
+            'why' => $cause['text'] ?? ($row->note ?: $this->fallbackCause($type)),
             'why_url' => $cause['url'] ?? null,
 
             'unit_cost' => $row->unit_cost !== null ? (float) $row->unit_cost : null,

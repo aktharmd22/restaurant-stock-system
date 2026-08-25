@@ -95,10 +95,17 @@ class Item extends Model implements HasMedia
         return $this->step_x100 / 100;
     }
 
-    /** How many decimal places to show. Pieces are never half. */
+    /**
+     * How many decimal places a stepper may show.
+     *
+     * Two, not one: an item stepping in quarters holds 1.25, and rounding that
+     * to "1.3" on screen meant the number a packer could change disagreed with
+     * the number printed beside it. Trailing zeros are stripped on display, so
+     * a whole 3 kg still reads as "3".
+     */
     public function decimals(): int
     {
-        return $this->order_unit === 'piece' || $this->order_unit === 'dozen' ? 0 : 1;
+        return $this->order_unit === 'piece' || $this->order_unit === 'dozen' ? 0 : 2;
     }
 
     /*

@@ -40,12 +40,13 @@ class StockLedgerService
         ?float $unitCost = null,
         ?User $by = null,
         bool $allowNegative = false,
+        ?string $note = null,
     ): StockLedger {
         $referenceType = $reference ? class_basename($reference) : null;
         $referenceId = $reference?->getKey();
 
         return DB::transaction(function () use (
-            $branchId, $delta, $type, $referenceType, $referenceId, $unitCost, $by, $allowNegative
+            $branchId, $delta, $type, $referenceType, $referenceId, $unitCost, $by, $allowNegative, $note
         ) {
             $balance = $this->lockBalance($branchId, $delta->item->id);
 
@@ -67,6 +68,7 @@ class StockLedgerService
                     'movement_type' => $type,
                     'reference_type' => $referenceType,
                     'reference_id' => $referenceId,
+                    'note' => $note,
                     'unit_cost' => $unitCost,
                     'balance_after' => $newQty,
                     'created_by' => $by?->id,
@@ -147,9 +149,23 @@ class StockLedgerService
      * and it is always allowed to take stock negative - the count is what is
      * actually on the shelf, and arguing with it helps nobody.
      */
-    public function adjustment(int $branchId, Quantity $signedDelta, ?Model $reference = null, ?User $by = null): StockLedger
-    {
-        return $this->record($branchId, $signedDelta, MovementType::Adjustment, $reference, null, $by, allowNegative: true);
+    public function adjustment(
+        int $branchId,
+        Quantity $signedDelta,
+        ?Model $reference = null,
+        ?User $by = null,
+        ?string $note = null,
+    ): StockLedger {
+        return $this->record(
+            $branchId,
+            $signedDelta,
+            MovementType::Adjustment,
+            $reference,
+            null,
+            $by,
+            allowNegative: true,
+            note: $note,
+        );
     }
 
     /*
