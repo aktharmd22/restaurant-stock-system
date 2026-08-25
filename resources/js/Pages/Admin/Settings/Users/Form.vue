@@ -47,21 +47,33 @@ function submit() {
         <form class="max-w-xl space-y-4 rounded-card border border-line bg-surface p-card lg:p-card-lg" @submit.prevent="submit">
             <TextField v-model="form.name" label="Name" :error="form.errors.name" />
 
-            <TextField
-                v-model="form.phone"
-                label="Phone number"
-                inputmode="tel"
-                hint="They sign in with this."
-                :error="form.errors.phone"
-            />
+            <!-- Either of these is a sign-in. Kitchen staff have a phone and
+                 no email; office people are often the other way round. -->
+            <fieldset class="space-y-4 rounded-control bg-page p-4">
+                <!-- w-full keeps the legend on its own line instead of cutting
+                     a notch out of the top of the box. -->
+                <legend class="w-full">
+                    <span class="block text-body font-medium text-ink">How they sign in</span>
+                    <span class="mt-0.5 block text-helper text-ink-soft">
+                        A phone number or an email — either one works. Fill in both if you have both.
+                    </span>
+                </legend>
 
-            <TextField
-                v-model="form.email"
-                label="Email (optional)"
-                type="email"
-                inputmode="email"
-                :error="form.errors.email"
-            />
+                <TextField
+                    v-model="form.phone"
+                    label="Phone number"
+                    inputmode="tel"
+                    :error="form.errors.phone"
+                />
+
+                <TextField
+                    v-model="form.email"
+                    label="Email"
+                    type="email"
+                    inputmode="email"
+                    :error="form.errors.email"
+                />
+            </fieldset>
 
             <SelectField
                 v-model="form.branch_id"
