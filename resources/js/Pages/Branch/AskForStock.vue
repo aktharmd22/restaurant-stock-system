@@ -42,20 +42,25 @@ const clientToken = ref(newToken());
 const form = useForm({ lines: [], note: '', needed_by: null, client_token: clientToken.value });
 
 /*
- * Arriving from "Running low" pre-fills those items with the suggested amount,
- * so the user lands on a form that is already right.
+ * The screen should open already filled in.
+ *
+ * Anything below its reorder level starts at the suggested amount - par level
+ * minus what is on the shelf - so most days the job is to glance down the list
+ * and press send. Items that are still well stocked stay at zero, because
+ * pre-filling all sixty would mean ordering the whole catalogue every day.
+ *
+ * Arriving from "Running low" fills in exactly those items instead.
  */
 onMounted(() => {
     const prefill = new URLSearchParams(window.location.search).get('prefill');
-    if (!prefill) return;
 
-    const ids = prefill.split(',').map(Number).filter(Boolean);
+    const wanted = prefill
+        ? props.items.filter((item) => prefill.split(',').map(Number).includes(item.id))
+        : props.items.filter((item) => item.is_low);
 
-    props.items
-        .filter((item) => ids.includes(item.id))
-        .forEach((item) => {
-            quantities.value[item.id] = item.suggested > 0 ? item.suggested : item.step;
-        });
+    wanted.forEach((item) => {
+        quantities.value[item.id] = item.suggested > 0 ? item.suggested : item.step;
+    });
 });
 
 const visibleItems = computed(() => {
@@ -217,14 +222,15 @@ function send() {
         <!-- Sticky footer: what is chosen, and the one action -->
         <template #action>
             <div class="flex items-center gap-3">
-                <div class="min-w-0 flex-1">
-                    <p class="text-body font-medium text-ink">
+                <div class="flex min-w-0 flex-1 items-center gap-1">
+                    <p class="shrink-0 text-body font-medium text-ink">
                         {{ chosen.length }} item<span v-if="chosen.length !== 1">s</span>
                     </p>
+
                     <button
                         v-if="chosen.length"
                         type="button"
-                        class="inline-flex items-center gap-1 text-helper text-ink-soft"
+                        class="flex min-h-touch items-center gap-1 px-2 text-helper text-ink-soft"
                         @click="clearAll"
                     >
                         <X :size="16" /> Start again
@@ -232,7 +238,7 @@ function send() {
                     <button
                         v-else
                         type="button"
-                        class="text-helper text-primary"
+                        class="flex min-h-touch items-center px-2 text-helper text-primary"
                         @click="noteOpen = true"
                     >
                         Add a note

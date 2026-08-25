@@ -113,6 +113,15 @@ class LowStockService
         // Top the shelf back up. Never suggest a negative.
         $suggestedBase = max(0, $par - (int) $row->qty_on_hand);
 
+        // Round to a whole number of steps. "36.04 kg" makes a person stop and
+        // think; "36 kg" is what they would actually say out loud, and this
+        // screen is supposed to take thirty seconds.
+        $stepBase = max(1, (int) round($item->stepSize() * $item->conversion_factor));
+
+        if ($suggestedBase > 0) {
+            $suggestedBase = max($stepBase, (int) (round($suggestedBase / $stepBase) * $stepBase));
+        }
+
         return [
             'id' => (int) $row->id,
             'name' => $row->name,

@@ -89,7 +89,10 @@ const lowPrefillUrl = computed(
             <section v-if="runningLow.length">
                 <div class="mb-2 flex items-end justify-between gap-3">
                     <h2 class="text-heading text-ink">Running low</h2>
-                    <Link :href="lowPrefillUrl" class="text-body font-medium text-primary">
+                    <Link
+                        :href="lowPrefillUrl"
+                        class="-mr-3 flex min-h-touch items-center px-3 text-body font-medium text-primary"
+                    >
                         Add all
                     </Link>
                 </div>

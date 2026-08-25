@@ -1,6 +1,6 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { Download, X } from 'lucide-vue-next';
+import { Download } from 'lucide-vue-next';
 import AppButton from '@/Components/ui/AppButton.vue';
 
 /**
@@ -69,14 +69,5 @@ onBeforeUnmount(() => window.removeEventListener('beforeinstallprompt', onPrompt
                 <AppButton variant="ghost" @click="dismiss">Not now</AppButton>
             </div>
         </div>
-
-        <button
-            type="button"
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-ink-muted"
-            aria-label="Close"
-            @click="dismiss"
-        >
-            <X :size="18" />
-        </button>
     </div>
 </template>
