@@ -108,9 +108,23 @@ class StockLedgerService
         return $this->record($branchId, $this->positive($quantity), MovementType::TransferIn, $reference, $unitCost, $by);
     }
 
-    public function transferOut(int $branchId, Quantity $quantity, ?Model $reference = null, ?User $by = null): StockLedger
+    /**
+     * The unit cost travels with the goods, so a branch's stock is valued at
+     * what the main store actually paid for it. Without it, "cost per branch"
+     * is guesswork.
+     */
+    public function transferOut(int $branchId, Quantity $quantity, ?Model $reference = null, ?User $by = null, ?float $unitCost = null): StockLedger
     {
-        return $this->record($branchId, $this->positive($quantity)->negated(), MovementType::TransferOut, $reference, null, $by);
+        return $this->record($branchId, $this->positive($quantity)->negated(), MovementType::TransferOut, $reference, $unitCost, $by);
+    }
+
+    /** What one base unit of this item is currently worth at a branch. */
+    public function averageCost(int $branchId, int $itemId): float
+    {
+        return (float) (StockBalance::withoutBranchScope()
+            ->where('branch_id', $branchId)
+            ->where('item_id', $itemId)
+            ->value('avg_cost') ?? 0);
     }
 
     public function consumption(int $branchId, Quantity $quantity, ?Model $reference = null, ?User $by = null): StockLedger

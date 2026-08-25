@@ -12,6 +12,8 @@ use App\Models\DispatchNote;
 use App\Models\Item;
 use App\Models\ReceiptDiscrepancy;
 use App\Models\RequestLine;
+use App\Enums\MovementType;
+use App\Models\StockLedger;
 use App\Models\StockRequest;
 use App\Models\User;
 use App\Services\AlertService;
@@ -285,7 +287,11 @@ class RequestWorkflowService
                 $this->reservations->release($request->to_branch_id, $approved);
 
                 if ($sent->isPositive()) {
-                    $this->ledger->transferOut($request->to_branch_id, $sent, $line, $by);
+                    // Value it at what the main store paid, and remember that on
+                    // the line so the branch receives it at the same price.
+                    $unitCost = $this->ledger->averageCost($request->to_branch_id, $line->item_id);
+
+                    $this->ledger->transferOut($request->to_branch_id, $sent, $line, $by, $unitCost ?: null);
                     $anythingSent = true;
                 }
 
@@ -362,7 +368,20 @@ class RequestWorkflowService
                 }
 
                 if ($confirmed->isPositive()) {
-                    $this->ledger->transferIn($request->from_branch_id, $confirmed, $line, null, $by);
+                    // Same price it left the main store at.
+                    $sentCost = StockLedger::withoutBranchScope()
+                        ->where('reference_type', 'RequestLine')
+                        ->where('reference_id', $line->id)
+                        ->where('movement_type', MovementType::TransferOut)
+                        ->value('unit_cost');
+
+                    $this->ledger->transferIn(
+                        $request->from_branch_id,
+                        $confirmed,
+                        $line,
+                        $sentCost !== null ? (float) $sentCost : null,
+                        $by,
+                    );
                 }
 
                 $line->update([

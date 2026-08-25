@@ -6,6 +6,7 @@ use App\Support\Quantity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseOrderLine extends Model
 {
@@ -33,6 +34,12 @@ class PurchaseOrderLine extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    /** A line can be delivered more than once. */
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(GoodsReceipt::class);
     }
 
     public function ordered(): Quantity

@@ -7,7 +7,10 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DispatchController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\RequestInboxController;
+use App\Http\Controllers\Admin\PurchaseOrderController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Branch\HomeController as BranchHomeController;
 use App\Http\Controllers\Branch\ReceiveController;
@@ -91,6 +94,29 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:stock.count')->name('stock.count');
         Route::post('/stock/count/{stockCount}/apply', [StockController::class, 'applyCount'])
             ->middleware('permission:stock.adjust')->name('stock.count.apply');
+
+        Route::middleware('permission:purchase.manage')->group(function () {
+            Route::get('/purchase', [PurchaseOrderController::class, 'index'])->name('purchase.index');
+            Route::get('/purchase/new', [PurchaseOrderController::class, 'create'])->name('purchase.create');
+            // Before the {purchaseOrder} route, or "suggestions" is read as an id.
+            Route::get('/purchase/suggestions', [PurchaseOrderController::class, 'suggestions'])->name('purchase.suggestions');
+            Route::post('/purchase', [PurchaseOrderController::class, 'store'])->name('purchase.store');
+            Route::get('/purchase/{purchaseOrder}', [PurchaseOrderController::class, 'show'])->name('purchase.show');
+            Route::post('/purchase/{purchaseOrder}/receive', [PurchaseOrderController::class, 'receive'])->name('purchase.receive');
+
+            Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+            Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+            Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
+            Route::post('/suppliers/{supplier}/toggle', [SupplierController::class, 'toggle'])->name('suppliers.toggle');
+        });
+
+        Route::middleware('permission:reports.view')->group(function () {
+            Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/{key}', [ReportController::class, 'show'])->name('reports.show');
+            Route::get('/reports/{key}/export/{format}', [ReportController::class, 'export'])
+                ->whereIn('format', ['xlsx', 'pdf'])
+                ->name('reports.export');
+        });
 
         Route::get('/settings', fn () => Inertia::render('Admin/Settings/Index', [
             // Hide what this person cannot use. The server still enforces it.

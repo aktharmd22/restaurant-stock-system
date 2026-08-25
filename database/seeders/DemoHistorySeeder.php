@@ -4,14 +4,19 @@ namespace Database\Seeders;
 
 use App\Enums\RoleName;
 use App\Enums\RequestStatus;
+use App\Enums\WastageReason;
 use App\Models\Branch;
 use App\Models\BranchItemSetting;
 use App\Models\Item;
 use App\Models\StockBalance;
+use App\Models\LocalPurchase;
 use App\Models\StockRequest;
+use App\Models\Supplier;
 use App\Models\User;
 use App\Services\Requests\RequestWorkflowService;
+use App\Services\Purchasing\PurchaseService;
 use App\Services\Stock\StockLedgerService;
+use App\Services\Stock\StockOperationsService;
 use App\Support\Quantity;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Seeder;
@@ -81,10 +86,151 @@ class DemoHistorySeeder extends Seeder
             }
         }
 
+        $this->addWasteAndLocalBuying($branches, $items);
+        $this->addSupplierOrders($main, $items, $storeKeeper);
         $this->closeStaleRequests($workflow, $storeKeeper);
 
         if ($this->skippedDays > 0) {
             $this->command?->info("Skipped {$this->skippedDays} branch-days where the store ran short.");
+        }
+    }
+
+    /**
+     * Kitchens throw things away and buy things in a hurry. Without either,
+     * the waste report and the local-buying screen demo as empty boxes.
+     */
+    private function addWasteAndLocalBuying($branches, $items): void
+    {
+        $operations = app(StockOperationsService::class);
+        $reasons = WastageReason::cases();
+
+        foreach ($branches as $branch) {
+            $staff = User::where('branch_id', $branch->id)->first();
+
+            if (! $staff) {
+                continue;
+            }
+
+            foreach (range(self::DAYS - 2, 1) as $daysAgo) {
+                // Roughly twice a week per branch.
+                if (random_int(1, 7) > 2) {
+                    continue;
+                }
+
+                $item = $items->random();
+
+                $onHand = (int) (StockBalance::withoutBranchScope()
+                    ->where('branch_id', $branch->id)
+                    ->where('item_id', $item->id)
+                    ->value('qty_on_hand') ?? 0);
+
+                if ($onHand < $item->conversion_factor) {
+                    continue;
+                }
+
+                // Never more than a tenth of what is there.
+                $qty = max(1, (int) round($onHand * (random_int(2, 10) / 100)));
+
+                try {
+                    Carbon::withTestNow(
+                        CarbonImmutable::now()->subDays($daysAgo)->setTime(random_int(10, 22), random_int(0, 59)),
+                        fn () => $operations->recordWastage(
+                            $branch,
+                            Quantity::fromBase($qty, $item),
+                            $reasons[array_rand($reasons)],
+                            $staff,
+                        ),
+                    );
+                } catch (Throwable) {
+                    // Not enough left by the time we got here. Skip it.
+                }
+            }
+
+            // A couple of emergency buys per branch, in every state.
+            foreach ([['approved', 6], ['rejected', 12], ['waiting', 2]] as [$state, $daysAgo]) {
+                $item = $items->random();
+                $qty = max(1, $item->conversion_factor * random_int(1, 4));
+
+                $purchase = Carbon::withTestNow(
+                    CarbonImmutable::now()->subDays($daysAgo)->setTime(13, 30),
+                    fn () => LocalPurchase::create([
+                        'branch_id' => $branch->id,
+                        'item_id' => $item->id,
+                        'qty' => $qty,
+                        'amount' => round($qty * $this->priceFor($item) * 1.2, 2),
+                        'reason' => collect([
+                            'Ran out during lunch service',
+                            'Main store was closed',
+                            'Delivery did not arrive',
+                        ])->random(),
+                        'status' => 'waiting',
+                        'requested_by' => $staff->id,
+                    ]),
+                );
+
+                $admin = User::where('email', 'store@demo.test')->first();
+
+                if ($state === 'approved') {
+                    Carbon::withTestNow(
+                        CarbonImmutable::now()->subDays($daysAgo)->setTime(18, 0),
+                        fn () => $operations->approveLocalPurchase($purchase, $admin),
+                    );
+                }
+
+                if ($state === 'rejected') {
+                    Carbon::withTestNow(
+                        CarbonImmutable::now()->subDays($daysAgo)->setTime(18, 0),
+                        fn () => $operations->rejectLocalPurchase($purchase, $admin, 'Ask us first next time'),
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * A few supplier orders so the purchase screens and the price report have
+     * something real in them.
+     */
+    private function addSupplierOrders($main, $items, User $storeKeeper): void
+    {
+        $purchases = app(PurchaseService::class);
+        $suppliers = Supplier::active()->get();
+
+        if ($suppliers->isEmpty()) {
+            return;
+        }
+
+        foreach ([['received', 20], ['part', 8], ['open', 2]] as [$state, $daysAgo]) {
+            $lines = $items->random(6)->map(fn (Item $item) => [
+                'item_id' => $item->id,
+                'qty' => random_int(2, 20),
+                'unit_price' => round($this->priceFor($item) * $item->conversion_factor, 2),
+            ])->all();
+
+            $order = Carbon::withTestNow(
+                CarbonImmutable::now()->subDays($daysAgo)->setTime(9, 0),
+                fn () => $purchases->createOrder(
+                    $suppliers->random()->id,
+                    $main->id,
+                    $storeKeeper,
+                    $lines,
+                    CarbonImmutable::now()->subDays($daysAgo - 2)->toDateString(),
+                ),
+            );
+
+            if ($state === 'open') {
+                continue;
+            }
+
+            $received = $order->lines
+                ->take($state === 'received' ? 6 : 3)
+                ->mapWithKeys(fn ($line) => [$line->id => $line->ordered()->toOrderUnit()])
+                ->all();
+
+            Carbon::withTestNow(
+                CarbonImmutable::now()->subDays($daysAgo - 2)->setTime(11, 0),
+                fn () => $purchases->receiveGoods($order->fresh(['lines.item']), $storeKeeper, $received),
+            );
         }
     }
 
