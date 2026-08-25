@@ -190,8 +190,15 @@ class PurchaseService
                 'items.conversion_factor',
                 'items.step_x100',
                 'categories.name as category_name',
-                DB::raw('COALESCE(main_balance.qty_on_hand, 0) - COALESCE(main_balance.qty_reserved, 0) as free_at_main'),
-                DB::raw('(SELECT COALESCE(SUM(GREATEST(bis.par_level - COALESCE(b.qty_on_hand, 0), 0)), 0)
+                /*
+                 * CAST to SIGNED before every subtraction. Quantities are
+                 * BIGINT UNSIGNED, so the moment a branch holds more than its
+                 * full shelf, par_level - qty_on_hand underflows and MySQL
+                 * aborts the whole query - GREATEST never gets to clamp it,
+                 * because the subtraction has already thrown.
+                 */
+                DB::raw('CAST(COALESCE(main_balance.qty_on_hand, 0) AS SIGNED) - CAST(COALESCE(main_balance.qty_reserved, 0) AS SIGNED) as free_at_main'),
+                DB::raw('(SELECT COALESCE(SUM(GREATEST(CAST(bis.par_level AS SIGNED) - CAST(COALESCE(b.qty_on_hand, 0) AS SIGNED), 0)), 0)
                           FROM branch_item_settings bis
                           JOIN branches br ON br.id = bis.branch_id AND br.type = \'sub\' AND br.is_active = 1
                           LEFT JOIN stock_balances b ON b.item_id = bis.item_id AND b.branch_id = bis.branch_id

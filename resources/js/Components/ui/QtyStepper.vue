@@ -67,6 +67,20 @@ function startHold(direction) {
     }, 420);
 }
 
+/*
+ * Enter and Space on a focused button produce a click with `detail: 0` - no
+ * pointer was involved. Holding to run up fast needs pointerdown, but that
+ * event never fires for a keyboard, so without this the +/- buttons did
+ * nothing at all for anyone not using a mouse or a finger. A real click from
+ * a mouse has detail >= 1 and is ignored here, because pointerdown already
+ * handled it.
+ */
+function onActivate(direction, event) {
+    if (event.detail === 0) {
+        apply(direction);
+    }
+}
+
 function stopHold() {
     clearTimeout(holdTimer);
     clearInterval(repeatTimer);
@@ -107,6 +121,7 @@ onBeforeUnmount(stopHold);
             class="flex h-touch w-touch shrink-0 items-center justify-center rounded-l-control text-ink transition active:scale-[0.97] disabled:text-ink-muted"
             :disabled="!canDecrease"
             :aria-label="`Less ${label}`"
+            @click="onActivate(-1, $event)"
             @pointerdown="startHold(-1)"
             @pointerup="stopHold"
             @pointerleave="stopHold"
@@ -154,6 +169,7 @@ onBeforeUnmount(stopHold);
             class="flex h-touch w-touch shrink-0 items-center justify-center rounded-r-control text-ink transition active:scale-[0.97] disabled:text-ink-muted"
             :disabled="!canIncrease"
             :aria-label="`More ${label}`"
+            @click="onActivate(1, $event)"
             @pointerdown="startHold(1)"
             @pointerup="stopHold"
             @pointerleave="stopHold"

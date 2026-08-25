@@ -268,14 +268,23 @@ const isOpen = (item) => openSections.value.has(item.label);
 
         <div class="lg:pl-sidebar">
             <header class="sticky top-0 z-20 border-b border-line bg-page/90 pt-safe backdrop-blur">
-                <div class="flex min-h-[64px] items-center gap-3 px-4 lg:px-6">
+                <!--
+                    Two rows on a phone, one on a laptop.
+                    Buttons like "Carry on counting" do not shrink, so sharing
+                    a line with them squeezed the page title down to fifty
+                    pixels - "Stock on hand" arrived as "Sto…". The actions get
+                    their own row instead, and the title gets the width.
+                -->
+                <div
+                    class="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-2 px-4 py-3 lg:flex lg:min-h-[64px] lg:gap-3 lg:px-6 lg:py-0"
+                >
                     <span
                         class="flex h-9 w-9 items-center justify-center rounded-control bg-shell lg:hidden"
                     >
                         <component :is="icons.Boxes" :size="18" class="text-white" aria-hidden="true" />
                     </span>
 
-                    <div class="min-w-0 flex-1">
+                    <div class="min-w-0 lg:flex-1">
                         <h1 class="truncate text-title text-ink">{{ props.title }}</h1>
                         <p v-if="props.subtitle" class="truncate text-helper text-ink-soft">
                             {{ props.subtitle }}
@@ -283,7 +292,13 @@ const isOpen = (item) => openSections.value.has(item.label);
                     </div>
 
                     <SoundIndicator />
-                    <slot name="header-action" />
+
+                    <div
+                        v-if="$slots['header-action']"
+                        class="col-span-3 flex flex-wrap items-center gap-2 lg:col-auto"
+                    >
+                        <slot name="header-action" />
+                    </div>
                 </div>
 
                 <OfflineBanner />
