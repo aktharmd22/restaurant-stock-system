@@ -32,8 +32,16 @@ class WastageController extends Controller
             ? ($request->integer('branch') ?: Branch::main()?->id)
             : $user->branch_id;
 
+        $search = $request->string('search')->trim()->value();
+        $reason = $request->string('reason')->value();
+
         $recent = Wastage::with(['item', 'recordedBy', 'branch'])
             ->when($user->isAdminSide() && $branchId, fn ($query) => $query->where('branch_id', $branchId))
+            ->when($search, fn ($query, string $term) => $query->whereHas(
+                'item',
+                fn ($item) => $item->where('name', 'like', "%{$term}%"),
+            ))
+            ->when($reason, fn ($query, string $value) => $query->where('reason', $value))
             ->latest()
             ->paginate(20)
             ->withQueryString()
@@ -56,7 +64,11 @@ class WastageController extends Controller
             'branches' => $user->isAdminSide()
                 ? Branch::active()->orderBy('name')->get(['id', 'name'])
                 : [],
-            'filters' => ['branch' => $branchId],
+            'filters' => [
+                'branch' => $branchId,
+                'search' => $search,
+                'reason' => $reason ?: null,
+            ],
         ]);
     }
 

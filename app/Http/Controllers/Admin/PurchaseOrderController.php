@@ -24,10 +24,16 @@ class PurchaseOrderController extends Controller
     {
         $status = $request->string('status')->value() ?: 'open';
 
+        $search = $request->string('search')->trim()->value();
+
         $orders = PurchaseOrder::with(['supplier', 'branch'])
             ->withCount('lines')
             ->when($status === 'open', fn ($query) => $query->whereIn('status', ['ordered', 'part_received']))
             ->when($status === 'done', fn ($query) => $query->whereIn('status', ['received', 'cancelled']))
+            ->when($search, fn ($query, string $term) => $query->where(function ($inner) use ($term) {
+                $inner->where('po_number', 'like', "%{$term}%")
+                    ->orWhereHas('supplier', fn ($supplier) => $supplier->where('name', 'like', "%{$term}%"));
+            }))
             ->latest()
             ->paginate(20)
             ->withQueryString()
@@ -47,7 +53,7 @@ class PurchaseOrderController extends Controller
 
         return Inertia::render('Admin/Purchase/Index', [
             'orders' => $orders,
-            'filters' => ['status' => $status],
+            'filters' => ['status' => $status, 'search' => $search],
             'currency' => setting('currency_symbol'),
         ]);
     }

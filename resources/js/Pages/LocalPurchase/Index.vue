@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Camera, Plus, Receipt } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -10,6 +10,7 @@ import Card from '@/Components/ui/Card.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import ListRow from '@/Components/ui/ListRow.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
 import StatusText from '@/Components/ui/StatusText.vue';
 import TextField from '@/Components/ui/TextField.vue';
@@ -18,6 +19,8 @@ import { money } from '@/Support/money';
 const props = defineProps({
     purchases: { type: Object, required: true },
     items: { type: Array, required: true },
+    branches: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({}) },
     canDecide: { type: Boolean, default: false },
     canRequest: { type: Boolean, default: false },
     currency: { type: String, default: '₹' },
@@ -30,6 +33,32 @@ const Layout = computed(() => (user.value.is_admin_side ? AdminLayout : BranchLa
 const sheetOpen = ref(false);
 const rejecting = ref(null);
 const rejectNote = ref('');
+
+const search = ref(props.filters.search ?? '');
+const status = ref(props.filters.status ?? 'all');
+const branchFilter = ref(props.filters.branch ?? '');
+
+let timer = null;
+
+watch(search, (value) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => reload({ search: value || undefined }), 300);
+});
+
+watch([status, branchFilter], () => reload());
+
+function reload(extra = {}) {
+    router.get(
+        '/local-purchases',
+        {
+            search: search.value || undefined,
+            status: status.value === 'all' ? undefined : status.value,
+            branch: branchFilter.value || undefined,
+            ...extra,
+        },
+        { preserveState: true, preserveScroll: true, replace: true },
+    );
+}
 
 const form = useForm({ item_id: '', qty: 1, amount: '', reason: '', bill: null });
 
@@ -92,6 +121,31 @@ function reject() {
                 Add a bill
             </AppButton>
         </template>
+
+        <Card class="mb-4">
+            <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <SearchField v-model="search" placeholder="Item name" />
+
+                <SelectField
+                    v-model="status"
+                    label="Where it got to"
+                    :options="[
+                        { value: 'all', label: 'Everything' },
+                        { value: 'waiting', label: 'Waiting only' },
+                        { value: 'approved', label: 'Approved only' },
+                        { value: 'rejected', label: 'Not approved only' },
+                    ]"
+                />
+
+                <SelectField
+                    v-if="branches.length"
+                    v-model="branchFilter"
+                    label="Branch"
+                    placeholder="Every branch"
+                    :options="branches.map((b) => ({ value: b.id, label: b.name }))"
+                />
+            </div>
+        </Card>
 
         <template v-if="purchases.data.length">
             <!-- Needs a decision. Actions live on the row, not in a card each. -->
@@ -184,8 +238,12 @@ function reject() {
         <EmptyState
             v-else
             icon="ShoppingCart"
-            title="Nothing bought locally"
-            message="When a branch has to buy something itself, it lands here with a photo of the bill."
+            :title="search || status !== 'all' ? 'Nothing matches that' : 'Nothing bought locally'"
+            :message="
+                search || status !== 'all'
+                    ? 'Try a different word, or clear what you picked.'
+                    : 'When a branch has to buy something itself, it lands here with a photo of the bill.'
+            "
         >
             <template v-if="canRequest" #action>
                 <AppButton @click="sheetOpen = true">Add a bill</AppButton>

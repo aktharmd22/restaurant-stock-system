@@ -39,6 +39,12 @@ class RequestInboxController extends Controller
                 $query->where('status', $status);
             })
             ->when($request->integer('branch'), fn ($query, $id) => $query->where('from_branch_id', $id))
+            ->when($request->string('search')->trim()->value(), function ($query, string $term) {
+                $query->where(function ($inner) use ($term) {
+                    $inner->where('request_number', 'like', "%{$term}%")
+                        ->orWhereHas('fromBranch', fn ($branch) => $branch->where('name', 'like', "%{$term}%"));
+                });
+            })
             ->when($request->date('from'), fn ($query, $date) => $query->whereDate('submitted_at', '>=', $date))
             ->when($request->date('to'), fn ($query, $date) => $query->whereDate('submitted_at', '<=', $date))
             ->mostUrgentFirst()
@@ -55,6 +61,7 @@ class RequestInboxController extends Controller
             'filters' => [
                 'status' => $status,
                 'branch' => $request->integer('branch') ?: null,
+                'search' => $request->string('search')->value(),
                 'from' => $request->string('from')->value(),
                 'to' => $request->string('to')->value(),
             ],

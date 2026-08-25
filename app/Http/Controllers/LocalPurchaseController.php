@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\StockException;
+use App\Models\Branch;
 use App\Models\Item;
 use App\Models\LocalPurchase;
 use App\Services\Stock\StockOperationsService;
@@ -27,9 +28,20 @@ class LocalPurchaseController extends Controller
     {
         $user = $request->user();
 
+        $search = $request->string('search')->trim()->value();
+        $status = $request->string('status')->value();
+        $branch = $request->integer('branch');
+
         $purchases = LocalPurchase::with(['item', 'requestedBy', 'branch'])
+            ->when($search, fn ($query, string $term) => $query->whereHas(
+                'item',
+                fn ($item) => $item->where('name', 'like', "%{$term}%"),
+            ))
+            ->when($status, fn ($query, string $value) => $query->where('status', $value))
+            ->when($branch, fn ($query, int $id) => $query->where('branch_id', $id))
             ->latest()
             ->paginate(20)
+            ->withQueryString()
             ->through(fn (LocalPurchase $purchase) => [
                 'id' => $purchase->id,
                 'item' => $purchase->item->name,
@@ -47,6 +59,14 @@ class LocalPurchaseController extends Controller
         return Inertia::render('LocalPurchase/Index', [
             'purchases' => $purchases,
             'items' => Item::active()->ordered()->get(['id', 'name', 'order_unit', 'conversion_factor', 'step_x100']),
+            'branches' => $user->isAdminSide()
+                ? Branch::active()->orderBy('name')->get(['id', 'name'])
+                : [],
+            'filters' => [
+                'search' => $search,
+                'status' => $status ?: 'all',
+                'branch' => $branch ?: null,
+            ],
             'canDecide' => $user->can('local_purchase.approve'),
             'canRequest' => $user->can('local_purchase.request'),
             'currency' => setting('currency_symbol'),

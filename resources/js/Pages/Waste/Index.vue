@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref } from 'vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref, watch } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { Camera, Plus, Trash2 } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import BranchLayout from '@/Layouts/BranchLayout.vue';
@@ -10,6 +10,7 @@ import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
 import Card from '@/Components/ui/Card.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
 import TextField from '@/Components/ui/TextField.vue';
 
@@ -26,6 +27,32 @@ const user = computed(() => page.props.auth?.user ?? {});
 const Layout = computed(() => (user.value.is_admin_side ? AdminLayout : BranchLayout));
 
 const sheetOpen = ref(false);
+
+const search = ref(props.filters.search ?? '');
+const reason = ref(props.filters.reason ?? '');
+const branchFilter = ref(props.filters.branch ?? '');
+
+let timer = null;
+
+watch(search, (value) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => reload({ search: value || undefined }), 300);
+});
+
+watch([reason, branchFilter], () => reload());
+
+function reload(extra = {}) {
+    router.get(
+        '/waste',
+        {
+            search: search.value || undefined,
+            reason: reason.value || undefined,
+            branch: branchFilter.value || undefined,
+            ...extra,
+        },
+        { preserveState: true, preserveScroll: true, replace: true },
+    );
+}
 
 const form = useForm({
     item_id: '',
@@ -64,6 +91,27 @@ function save() {
                 Record waste
             </AppButton>
         </template>
+
+        <!-- Every question this screen gets asked, in one row. -->
+        <Card class="mb-4">
+            <div class="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <SearchField v-model="search" placeholder="Item name" />
+
+                <SelectField
+                    v-model="reason"
+                    label="What happened"
+                    placeholder="Any reason"
+                    :options="reasons"
+                />
+
+                <SelectField
+                    v-if="branches.length"
+                    v-model="branchFilter"
+                    label="Branch"
+                    :options="branches.map((b) => ({ value: b.id, label: b.name }))"
+                />
+            </div>
+        </Card>
 
         <div v-if="entries.data.length">
             <Card :padded="false">
@@ -111,8 +159,12 @@ function save() {
         <EmptyState
             v-else
             icon="Trash2"
-            title="Nothing thrown away yet"
-            message="Recording waste keeps your stock numbers honest, and shows where money is going."
+            :title="search || reason ? 'Nothing matches that' : 'Nothing thrown away yet'"
+            :message="
+                search || reason
+                    ? 'Try a different word, or clear what you picked.'
+                    : 'Recording waste keeps your stock numbers honest, and shows where money is going.'
+            "
         >
             <template #action>
                 <AppButton @click="sheetOpen = true">Record waste</AppButton>

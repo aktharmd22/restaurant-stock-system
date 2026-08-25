@@ -1,4 +1,5 @@
 <script setup>
+import { ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Lightbulb, Plus, Users } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
@@ -7,6 +8,7 @@ import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import Card from '@/Components/ui/Card.vue';
 import ListRow from '@/Components/ui/ListRow.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import StatusText from '@/Components/ui/StatusText.vue';
 import { rupees } from '@/Support/money';
 
@@ -22,8 +24,25 @@ const tabs = [
     { value: 'all', label: 'Everything' },
 ];
 
+const search = ref(props.filters.search ?? '');
+
+let timer = null;
+
+watch(search, () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => reload(), 300);
+});
+
 function pick(status) {
-    router.get('/admin/purchase', { status }, { preserveState: true, preserveScroll: true, replace: true });
+    reload({ status });
+}
+
+function reload(extra = {}) {
+    router.get(
+        '/admin/purchase',
+        { status: props.filters.status, search: search.value || undefined, ...extra },
+        { preserveState: true, preserveScroll: true, replace: true },
+    );
 }
 </script>
 
@@ -54,6 +73,10 @@ function pick(status) {
                 Suppliers
             </Link>
         </div>
+
+        <Card class="mb-4">
+            <SearchField v-model="search" placeholder="Supplier or order number" />
+        </Card>
 
         <div class="mb-4 flex gap-2">
             <button
@@ -110,8 +133,12 @@ function pick(status) {
         <EmptyState
             v-else
             icon="ShoppingCart"
-            title="No orders here"
-            message="Place an order and it will show up here until everything has arrived."
+            :title="search ? 'Nothing matches that' : 'No orders here'"
+            :message="
+                search
+                    ? 'Try a different supplier or order number.'
+                    : 'Place an order and it will show up here until everything has arrived.'
+            "
         >
             <template #action>
                 <AppButton href="/admin/purchase/new">New order</AppButton>

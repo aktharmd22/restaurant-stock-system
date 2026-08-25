@@ -7,6 +7,7 @@ import AppButton from '@/Components/ui/AppButton.vue';
 import EmptyState from '@/Components/ui/EmptyState.vue';
 import Pagination from '@/Components/ui/Pagination.vue';
 import QtyStepper from '@/Components/ui/QtyStepper.vue';
+import SearchField from '@/Components/ui/SearchField.vue';
 import SelectField from '@/Components/ui/SelectField.vue';
 import Card from '@/Components/ui/Card.vue';
 import ListRow from '@/Components/ui/ListRow.vue';
@@ -82,8 +83,17 @@ function restore(line) {
     decisions.value[line.id].reason_code = null;
 }
 
+const search = ref(props.filters.search ?? '');
+
+let searchTimer = null;
+
+watch(search, (value) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => filterBy({ search: value || undefined }), 300);
+});
+
 function filterBy(changes) {
-    router.get('/admin/requests', { ...props.filters, ...changes, selected: undefined }, {
+    router.get('/admin/requests', { ...props.filters, search: search.value || undefined, ...changes, selected: undefined }, {
         preserveState: true,
         preserveScroll: true,
         replace: true,
@@ -114,20 +124,24 @@ function approveAll() {
         <div class="grid gap-4 lg:grid-cols-[380px_1fr]">
             <!-- Left: the queue. Hidden on a phone once something is open. -->
             <div :class="selected ? 'hidden lg:block' : ''">
-                <div class="grid grid-cols-2 gap-2">
-                    <SelectField
-                        label="Show"
-                        :model-value="filters.status"
-                        :options="statuses"
-                        @update:model-value="(value) => filterBy({ status: value })"
-                    />
-                    <SelectField
-                        label="Branch"
-                        :model-value="filters.branch ?? ''"
-                        placeholder="Every branch"
-                        :options="branches.map((b) => ({ value: b.id, label: b.name }))"
-                        @update:model-value="(value) => filterBy({ branch: value || undefined })"
-                    />
+                <div class="space-y-2">
+                    <SearchField v-model="search" hide-label placeholder="Branch or request number" />
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <SelectField
+                            label="Show"
+                            :model-value="filters.status"
+                            :options="statuses"
+                            @update:model-value="(value) => filterBy({ status: value })"
+                        />
+                        <SelectField
+                            label="Branch"
+                            :model-value="filters.branch ?? ''"
+                            placeholder="Every branch"
+                            :options="branches.map((b) => ({ value: b.id, label: b.name }))"
+                            @update:model-value="(value) => filterBy({ branch: value || undefined })"
+                        />
+                    </div>
                 </div>
 
                 <div v-if="requests.data.length" class="mt-3">
