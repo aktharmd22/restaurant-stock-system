@@ -143,10 +143,13 @@ class ItemController extends Controller
         return $sentence;
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('Admin/Settings/Items/Form', [
             'item' => null,
+            // Arriving from a search that found nothing: keep what was typed
+            // rather than making someone type it a second time.
+            'suggestedName' => $request->string('name')->trim()->limit(60, '')->value(),
             'categories' => $this->categoryOptions(),
             'branches' => $this->branchParLevels(null),
             'units' => $this->unitOptions(),

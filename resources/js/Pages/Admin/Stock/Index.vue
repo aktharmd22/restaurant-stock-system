@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ClipboardCheck, Clock, Pencil, Scale, Trash2, TrendingDown, X } from 'lucide-vue-next';
+import { ClipboardCheck, Clock, Pencil, Plus, Scale, Trash2, TrendingDown, X } from 'lucide-vue-next';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import AppButton from '@/Components/ui/AppButton.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
@@ -24,6 +24,7 @@ const props = defineProps({
     filters: { type: Object, required: true },
     openCount: { type: [Number, null], default: null },
     canAdjust: { type: Boolean, default: false },
+    canAddItems: { type: Boolean, default: false },
 });
 
 const search = ref(props.filters.search ?? '');
@@ -118,13 +119,26 @@ function saveCorrection() {
         <Head title="Stock" />
 
         <template #header-action>
-            <AppButton
-                :href="openCount ? `/admin/stock/count/${openCount}` : undefined"
-                @click="openCount ? null : startCount()"
-            >
-                <template #icon><ClipboardCheck :size="16" /></template>
-                {{ openCount ? 'Carry on counting' : 'Count stock' }}
-            </AppButton>
+            <div class="flex gap-2">
+                <!-- Stock is where someone notices an item is missing, so this
+                     is where they should be able to add one. -->
+                <AppButton
+                    v-if="canAddItems"
+                    variant="secondary"
+                    href="/admin/settings/items/new"
+                >
+                    <template #icon><Plus :size="16" /></template>
+                    Add item
+                </AppButton>
+
+                <AppButton
+                    :href="openCount ? `/admin/stock/count/${openCount}` : undefined"
+                    @click="openCount ? null : startCount()"
+                >
+                    <template #icon><ClipboardCheck :size="16" /></template>
+                    {{ openCount ? 'Carry on counting' : 'Count stock' }}
+                </AppButton>
+            </div>
         </template>
 
         <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
@@ -350,8 +364,21 @@ function saveCorrection() {
                     : 'Record a purchase or send some stock to a branch to see numbers.'
             "
         >
-            <template v-if="filtered" #action>
-                <AppButton variant="secondary" @click="clearFilters">Clear what I picked</AppButton>
+            <template #action>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <AppButton v-if="filtered" variant="secondary" @click="clearFilters">
+                        Clear what I picked
+                    </AppButton>
+                    <AppButton
+                        v-if="canAddItems && search"
+                        :href="`/admin/settings/items/new?name=${encodeURIComponent(search)}`"
+                    >
+                        Add "{{ search }}" as a new item
+                    </AppButton>
+                    <AppButton v-else-if="canAddItems" href="/admin/settings/items/new">
+                        Add an item
+                    </AppButton>
+                </div>
             </template>
         </EmptyState>
 

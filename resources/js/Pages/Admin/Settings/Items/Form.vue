@@ -10,6 +10,7 @@ import TextField from '@/Components/ui/TextField.vue';
 
 const props = defineProps({
     item: { type: Object, default: null },
+    suggestedName: { type: String, default: '' },
     categories: { type: Array, required: true },
     branches: { type: Array, required: true },
     units: { type: Object, required: true },
@@ -19,7 +20,7 @@ const isNew = !props.item;
 const photoPreview = ref(props.item?.photo ?? null);
 
 const form = useForm({
-    name: props.item?.name ?? '',
+    name: props.item?.name ?? props.suggestedName ?? '',
     category_id: props.item?.category_id ?? '',
     base_unit: props.item?.base_unit ?? 'g',
     order_unit: props.item?.order_unit ?? 'kg',

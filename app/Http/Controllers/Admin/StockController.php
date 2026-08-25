@@ -64,6 +64,7 @@ class StockController extends Controller
                 'show' => $show,
             ],
             'canAdjust' => $request->user()->can('stock.adjust'),
+            'canAddItems' => $request->user()->can('settings.manage'),
             'openCount' => StockCount::withoutBranchScope()
                 ->where('branch_id', $branch->id)
                 ->where('status', 'open')
